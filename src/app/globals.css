@@ -1,0 +1,201 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=Playfair+Display:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== CSS Variables ===== */
+:root {
+  --primary: #1b4d6e;
+  --primary-light: #2a6f97;
+  --primary-dark: #0f2d42;
+  --accent: #c8a96e;
+  --accent-light: #e5d5b0;
+  --bg: #fafaf8;
+  --bg-card: #ffffff;
+  --bg-dark: #0f1923;
+  --text: #1a1a1a;
+  --text-light: #6b7280;
+  --text-muted: #9ca3af;
+  --border: #e8e6e1;
+  --success: #2d9f6f;
+  --warning: #e8a838;
+  --glass: rgba(255, 255, 255, 0.72);
+}
+
+/* ===== Base ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Noto Sans KR", "Pretendard", -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--accent-light);
+  color: var(--primary-dark);
+}
+
+/* ===== Animations ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.7s ease-out forwards;
+}
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+.animate-slideRight {
+  animation: slideInRight 0.6s ease-out forwards;
+}
+.animate-scaleIn {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+/* ===== Reusable Components ===== */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-8 py-3.5 rounded-lg text-sm font-semibold text-white cursor-pointer transition-all duration-300 tracking-wide;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(27, 77, 110, 0.35);
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center px-8 py-3.5 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 tracking-wide bg-transparent;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+  }
+  .btn-outline:hover {
+    background: var(--primary);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center px-8 py-3.5 rounded-lg text-sm font-bold cursor-pointer transition-all duration-300 tracking-wide;
+    background: linear-gradient(135deg, var(--accent), #d4b87a);
+    color: var(--primary-dark);
+  }
+  .btn-accent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(200, 169, 110, 0.4);
+  }
+
+  .glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+  }
+
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+  .hover-lift:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(27, 77, 110, 0.12);
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+  .hover-glow:hover {
+    box-shadow: 0 0 0 2px var(--accent), 0 8px 30px rgba(200, 169, 110, 0.2);
+  }
+
+  .section-container {
+    @apply max-w-[1200px] mx-auto px-6;
+  }
+
+  .gold-line {
+    width: 48px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    border-radius: 1px;
+  }
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
