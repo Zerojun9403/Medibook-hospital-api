@@ -76,14 +76,22 @@ export const departmentAPI = { getAll: () => fetchAPI("/departments") };
 export const doctorAPI = {
   getAll: () => fetchAPI("/doctors"),
   getById: (id: number) => fetchAPI(`/doctors/${id}`),
+  getByDepartment: (departmentId: number) => fetchAPI(`/doctors?departmentId=${departmentId}`),
 };
 export const reservationAPI = {
   create: (data: { doctorId: number; reservationDate: string; reservationTime: string; symptom?: string }) =>
     fetchAPI("/reservations", { method: "POST", body: JSON.stringify(data) }),
   getMyReservations: () => fetchAPI("/reservations/my"),
   cancel: (id: number) => fetchAPI(`/reservations/${id}/cancel`, { method: "PATCH" }),
+  getAvailableSlots: (doctorId: number, date: string) =>
+    fetchAPI(`/reservations/available-slots?doctorId=${doctorId}&date=${date}`),
 };
 export const notificationAPI = {
   getAll: () => fetchAPI("/notifications"),
   markAsRead: (id: number) => fetchAPI(`/notifications/${id}/read`, { method: "PATCH" }),
+};
+// ===== User API =====
+export const userAPI = {
+  getProfile: () => fetchAPI("/users/me"),
+  getStats: () => fetchAPI("/users/me/stats"),
 };

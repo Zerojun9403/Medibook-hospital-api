@@ -1,13 +1,37 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { departments } from "@/lib/constants";
+import { departmentAPI } from "@/lib/api";
+import { departments as fallbackDepts } from "@/lib/constants";
+
+interface Department {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+}
 
 export default function DepartmentsSection() {
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    departmentAPI.getAll()
+      .then((data) => setDepartments(data))
+      .catch(() => {
+        // API 실패 시 기존 하드코딩 데이터 사용
+        setDepartments(fallbackDepts.map((d, i) => ({
+          id: i + 1,
+          name: d.name,
+          description: d.desc,
+          icon: d.icon,
+        })));
+      });
+  }, []);
+
   return (
     <section className="py-[120px] bg-gradient-to-b from-[#F5F4F0] to-bg">
       <div className="section-container">
-        {/* Section Header */}
         <div className="flex justify-between items-end mb-14 flex-wrap gap-6">
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -25,11 +49,10 @@ export default function DepartmentsSection() {
           </Link>
         </div>
 
-        {/* Department Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {departments.map((dept, i) => (
+          {departments.map((dept) => (
             <Link
-              key={i}
+              key={dept.id}
               href={`/booking?dept=${encodeURIComponent(dept.name)}`}
               className="hover-glow bg-bg-card rounded-[14px] p-6 border border-[var(--border)] cursor-pointer transition-all duration-300 no-underline"
             >
@@ -41,13 +64,10 @@ export default function DepartmentsSection() {
                   <div className="text-base font-bold text-primary-dark">
                     {dept.name}
                   </div>
-                  <div className="text-xs text-[var(--text-muted)]">
-                    전문의 {dept.doctors}명
-                  </div>
                 </div>
               </div>
               <p className="text-[13px] text-[var(--text-light)] leading-[1.55] mb-3.5">
-                {dept.desc}
+                {dept.description}
               </p>
               <div className="flex justify-between items-center pt-3.5 border-t border-[var(--border)]">
                 <div className="flex items-center gap-1.5">
@@ -56,9 +76,6 @@ export default function DepartmentsSection() {
                     예약 가능
                   </span>
                 </div>
-                <span className="text-xs text-[var(--text-muted)]">
-                  대기 {dept.wait}
-                </span>
               </div>
             </Link>
           ))}
