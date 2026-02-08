@@ -83,6 +83,8 @@ export default function LoginPage() {
           window.location.href = "/admin/dashboard";
         } else if (role === "DOCTOR") {
           window.location.href = "/doctors/dashboard";
+        } else {
+          window.location.href = "/patient/dashboard";
         }
       }
     } catch (err: any) {

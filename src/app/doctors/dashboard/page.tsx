@@ -320,12 +320,30 @@ export default function DoctorDashboard() {
                                                             )}
                                                         </div>
 
-                                                        <button
-                                                            onClick={() => openPrescriptionModal(res)}
-                                                            className="text-[11px] text-primary hover:text-white hover:bg-primary bg-primary/[0.06] border border-primary/20 hover:border-primary rounded-lg px-3 py-1.5 cursor-pointer transition-all font-semibold"
-                                                        >
-                                                            💊 처방
-                                                        </button>
+                                                        <div className="flex gap-2">
+                                                            {res.status === "CONFIRMED" && (
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        if (!confirm(`${res.patientName} 환자의 진료를 완료 처리하시겠습니까?`)) return;
+                                                                        try {
+                                                                            await apiFetch(`/api/reservations/${res.id}/complete`, { method: "PATCH" });
+                                                                            loadData();
+                                                                        } catch (e: any) {
+                                                                            alert(e.message || "처리 실패");
+                                                                        }
+                                                                    }}
+                                                                    className="text-[11px] text-[#2d9f6f] hover:text-white hover:bg-[#2d9f6f] bg-[rgba(45,159,111,0.06)] border border-[#2d9f6f]/20 hover:border-[#2d9f6f] rounded-lg px-3 py-1.5 cursor-pointer transition-all font-semibold"
+                                                                >
+                                                                    ✅ 완료
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => openPrescriptionModal(res)}
+                                                                className="text-[11px] text-primary hover:text-white hover:bg-primary bg-primary/[0.06] border border-primary/20 hover:border-primary rounded-lg px-3 py-1.5 cursor-pointer transition-all font-semibold"
+                                                            >
+                                                                💊 처방
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 );
                                             })}
@@ -470,131 +488,133 @@ export default function DoctorDashboard() {
             </div>
 
             {/* Prescription Modal */}
-            {showPrescriptionModal && selectedReservation && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6" onClick={() => setShowPrescriptionModal(false)}>
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                    <div className="relative bg-white rounded-2xl max-w-[560px] w-full max-h-[90vh] overflow-y-auto animate-scaleIn" onClick={(e) => e.stopPropagation()}>
-                        {/* Modal Header */}
-                        <div className="p-6 border-b border-[var(--border)]">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-[18px] font-bold text-primary-dark">💊 투약 기록 작성</h2>
-                                    <p className="text-[12px] text-[var(--text-muted)] mt-1">
-                                        {selectedReservation.patientName} 환자 · {selectedReservation.reservationDate}
-                                    </p>
+            {
+                showPrescriptionModal && selectedReservation && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6" onClick={() => setShowPrescriptionModal(false)}>
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                        <div className="relative bg-white rounded-2xl max-w-[560px] w-full max-h-[90vh] overflow-y-auto animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-[var(--border)]">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h2 className="text-[18px] font-bold text-primary-dark">💊 투약 기록 작성</h2>
+                                        <p className="text-[12px] text-[var(--text-muted)] mt-1">
+                                            {selectedReservation.patientName} 환자 · {selectedReservation.reservationDate}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowPrescriptionModal(false)}
+                                        className="w-8 h-8 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] hover:text-primary cursor-pointer transition-all"
+                                    >
+                                        ✕
+                                    </button>
                                 </div>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-6 flex flex-col gap-4">
+                                {/* 진단명 */}
+                                <div>
+                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">진단명 *</label>
+                                    <input
+                                        type="text"
+                                        placeholder="예: 급성 위염, 감기"
+                                        value={prescriptionForm.diagnosis}
+                                        onChange={(e) => setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
+                                    />
+                                </div>
+
+                                {/* 약품명 + 용량 */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">약품명 *</label>
+                                        <input
+                                            type="text"
+                                            placeholder="예: 아목시실린"
+                                            value={prescriptionForm.medicineName}
+                                            onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medicineName: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">용량 *</label>
+                                        <input
+                                            type="text"
+                                            placeholder="예: 500mg"
+                                            value={prescriptionForm.dosage}
+                                            onChange={(e) => setPrescriptionForm({ ...prescriptionForm, dosage: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* 복용법 */}
+                                <div>
+                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">복용법 *</label>
+                                    <input
+                                        type="text"
+                                        placeholder="예: 1일 3회, 식후 30분"
+                                        value={prescriptionForm.instruction}
+                                        onChange={(e) => setPrescriptionForm({ ...prescriptionForm, instruction: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
+                                    />
+                                </div>
+
+                                {/* 기간 */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">시작일 *</label>
+                                        <input
+                                            type="date"
+                                            value={prescriptionForm.startDate}
+                                            onChange={(e) => setPrescriptionForm({ ...prescriptionForm, startDate: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">종료일 *</label>
+                                        <input
+                                            type="date"
+                                            value={prescriptionForm.endDate}
+                                            onChange={(e) => setPrescriptionForm({ ...prescriptionForm, endDate: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* 메모 */}
+                                <div>
+                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">의사 메모 (선택)</label>
+                                    <textarea
+                                        placeholder="추가 참고사항을 입력하세요..."
+                                        value={prescriptionForm.memo}
+                                        onChange={(e) => setPrescriptionForm({ ...prescriptionForm, memo: e.target.value })}
+                                        className="w-full h-20 px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all resize-none bg-[var(--bg)] leading-[1.6]"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="p-6 pt-0 flex gap-3">
                                 <button
                                     onClick={() => setShowPrescriptionModal(false)}
-                                    className="w-8 h-8 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] hover:text-primary cursor-pointer transition-all"
+                                    className="btn-outline flex-1 !py-3 !text-[13px]"
                                 >
-                                    ✕
+                                    취소
+                                </button>
+                                <button
+                                    onClick={handlePrescriptionSubmit}
+                                    disabled={isSubmitting}
+                                    className="btn-accent flex-1 !py-3 !text-[13px] !font-bold disabled:opacity-60"
+                                >
+                                    {isSubmitting ? "등록 중..." : "💊 처방 등록"}
                                 </button>
                             </div>
                         </div>
-
-                        {/* Modal Body */}
-                        <div className="p-6 flex flex-col gap-4">
-                            {/* 진단명 */}
-                            <div>
-                                <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">진단명 *</label>
-                                <input
-                                    type="text"
-                                    placeholder="예: 급성 위염, 감기"
-                                    value={prescriptionForm.diagnosis}
-                                    onChange={(e) => setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
-                                />
-                            </div>
-
-                            {/* 약품명 + 용량 */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">약품명 *</label>
-                                    <input
-                                        type="text"
-                                        placeholder="예: 아목시실린"
-                                        value={prescriptionForm.medicineName}
-                                        onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medicineName: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">용량 *</label>
-                                    <input
-                                        type="text"
-                                        placeholder="예: 500mg"
-                                        value={prescriptionForm.dosage}
-                                        onChange={(e) => setPrescriptionForm({ ...prescriptionForm, dosage: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* 복용법 */}
-                            <div>
-                                <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">복용법 *</label>
-                                <input
-                                    type="text"
-                                    placeholder="예: 1일 3회, 식후 30분"
-                                    value={prescriptionForm.instruction}
-                                    onChange={(e) => setPrescriptionForm({ ...prescriptionForm, instruction: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
-                                />
-                            </div>
-
-                            {/* 기간 */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">시작일 *</label>
-                                    <input
-                                        type="date"
-                                        value={prescriptionForm.startDate}
-                                        onChange={(e) => setPrescriptionForm({ ...prescriptionForm, startDate: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">종료일 *</label>
-                                    <input
-                                        type="date"
-                                        value={prescriptionForm.endDate}
-                                        onChange={(e) => setPrescriptionForm({ ...prescriptionForm, endDate: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* 메모 */}
-                            <div>
-                                <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">의사 메모 (선택)</label>
-                                <textarea
-                                    placeholder="추가 참고사항을 입력하세요..."
-                                    value={prescriptionForm.memo}
-                                    onChange={(e) => setPrescriptionForm({ ...prescriptionForm, memo: e.target.value })}
-                                    className="w-full h-20 px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all resize-none bg-[var(--bg)] leading-[1.6]"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Modal Footer */}
-                        <div className="p-6 pt-0 flex gap-3">
-                            <button
-                                onClick={() => setShowPrescriptionModal(false)}
-                                className="btn-outline flex-1 !py-3 !text-[13px]"
-                            >
-                                취소
-                            </button>
-                            <button
-                                onClick={handlePrescriptionSubmit}
-                                disabled={isSubmitting}
-                                className="btn-accent flex-1 !py-3 !text-[13px] !font-bold disabled:opacity-60"
-                            >
-                                {isSubmitting ? "등록 중..." : "💊 처방 등록"}
-                            </button>
-                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
