@@ -79,10 +79,10 @@ export default function LoginPage() {
       const res = await authAPI.login(email, password);
       if (res.success) {
         const role = res.data.role;
-        if (role === "DOCTOR" || role === "ADMIN") {
-          window.location.href = "/doctor/dashboard";
-        } else {
-          window.location.href = "/patient/dashboard";
+        if (role === "ADMIN") {
+          window.location.href = "/admin/dashboard";
+        } else if (role === "DOCTOR") {
+          window.location.href = "/doctors/dashboard";
         }
       }
     } catch (err: any) {
