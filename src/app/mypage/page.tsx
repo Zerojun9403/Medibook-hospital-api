@@ -2,12 +2,55 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, Calendar, Clock, CreditCard, ChevronRight, Bell, Shield } from "@/components/icons/Icons";
+import { Heart, Shield } from "@/components/icons/Icons";
+import { tokenManager } from "@/lib/api";
+
+const API_BASE = "http://localhost:8080";
 
 interface User {
     name: string;
     role: string;
     email?: string;
+}
+
+interface Reservation {
+    id: number;
+    reservationCode: string;
+    patientName: string;
+    doctorName: string;
+    departmentName: string;
+    reservationDate: string;
+    reservationTime: string;
+    status: string;
+    symptom: string;
+    fee: number;
+}
+
+interface Payment {
+    id: number;
+    paymentCode: string;
+    doctorName: string;
+    departmentName: string;
+    reservationDate: string;
+    amount: number;
+    method: string;
+    status: string;
+    createdAt: string;
+}
+
+interface Prescription {
+    id: number;
+    patientName: string;
+    doctorName: string;
+    departmentName: string;
+    diagnosis: string;
+    medicineName: string;
+    dosage: string;
+    instruction: string;
+    startDate: string;
+    endDate: string;
+    memo: string;
+    createdAt: string;
 }
 
 const statusMap: Record<string, { label: string; color: string; bg: string }> = {
@@ -18,41 +61,67 @@ const statusMap: Record<string, { label: string; color: string; bg: string }> = 
     CANCELLED: { label: "취소", color: "#ef4444", bg: "rgba(239,68,68,0.08)" },
 };
 
-// Mock 예약 데이터
-const mockReservations = [
-    { id: 1, code: "RES-20260210-001", doctor: "김정현", dept: "내과", date: "2026-02-10", time: "10:00", status: "CONFIRMED", fee: 15000 },
-    { id: 2, code: "RES-20260214-002", doctor: "최은지", dept: "피부과", date: "2026-02-14", time: "14:30", status: "WAITING", fee: 20000 },
-    { id: 3, code: "RES-20260201-003", doctor: "이수민", dept: "소아과", date: "2026-02-01", time: "11:00", status: "COMPLETED", fee: 12000 },
-    { id: 4, code: "RES-20260125-004", doctor: "박현우", dept: "정형외과", date: "2026-01-25", time: "09:30", status: "COMPLETED", fee: 25000 },
-    { id: 5, code: "RES-20260120-005", doctor: "정민호", dept: "내과", date: "2026-01-20", time: "15:00", status: "CANCELLED", fee: 15000 },
-];
+const methodMap: Record<string, string> = {
+    CARD: "💳 카드", CASH: "💵 현금", TRANSFER: "🏦 이체",
+    KAKAO_PAY: "🟡 카카오페이", NAVER_PAY: "🟢 네이버페이",
+};
 
-const mockNotifications = [
-    { id: 1, message: "2월 10일 내과 예약이 확정되었습니다", date: "2026-02-06", isRead: false },
-    { id: 2, message: "피부과 예약 대기 중입니다", date: "2026-02-05", isRead: false },
-    { id: 3, message: "2월 1일 소아과 진료가 완료되었습니다", date: "2026-02-01", isRead: true },
-    { id: 4, message: "처방전이 발급되었습니다", date: "2026-01-25", isRead: true },
-];
+async function apiFetch(endpoint: string, options: RequestInit = {}) {
+    const token = tokenManager.getAccessToken();
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(options.headers as Record<string, string>),
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+    const text = await res.text();
+    if (!res.ok) throw new Error("요청 실패");
+    return text ? JSON.parse(text) : null;
+}
 
-type Tab = "reservations" | "notifications" | "profile";
+type Tab = "reservations" | "prescriptions" | "payments" | "profile";
 
 export default function MyPage() {
     const [user, setUser] = useState<User | null>(null);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [payments, setPayments] = useState<Payment[]>([]);
+    const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
     const [activeTab, setActiveTab] = useState<Tab>("reservations");
     const [filterStatus, setFilterStatus] = useState("전체");
 
     useEffect(() => {
         const u = localStorage.getItem("user");
         if (u) setUser(JSON.parse(u));
+        loadData();
     }, []);
 
+    const loadData = () => {
+        apiFetch("/api/reservations/my").then(setReservations).catch(() => setReservations([]));
+        apiFetch("/api/payments/my").then(setPayments).catch(() => setPayments([]));
+        apiFetch("/api/prescriptions/patient").then(setPrescriptions).catch(() => setPrescriptions([]));
+    };
+
+    const handleCancel = async (id: number) => {
+        if (!confirm("예약을 취소하시겠습니까?")) return;
+        try {
+            await apiFetch(`/api/reservations/${id}/cancel`, { method: "PATCH" });
+            loadData();
+        } catch {
+            alert("취소에 실패했습니다.");
+        }
+    };
+
     const filteredReservations = filterStatus === "전체"
-        ? mockReservations
-        : mockReservations.filter((r) => r.status === filterStatus);
+        ? reservations
+        : reservations.filter((r) => r.status === filterStatus);
+
+    const upcomingCount = reservations.filter((r) => r.status === "CONFIRMED" || r.status === "WAITING").length;
+    const totalPaid = payments.filter((p) => p.status === "COMPLETED").reduce((s, p) => s + p.amount, 0);
 
     const tabs: { key: Tab; label: string; icon: string; count?: number }[] = [
-        { key: "reservations", label: "예약 내역", icon: "📅", count: mockReservations.filter((r) => r.status === "CONFIRMED" || r.status === "WAITING").length },
-        { key: "notifications", label: "알림", icon: "🔔", count: mockNotifications.filter((n) => !n.isRead).length },
+        { key: "reservations", label: "예약 내역", icon: "📅", count: upcomingCount },
+        { key: "prescriptions", label: "처방 기록", icon: "💊", count: prescriptions.length },
+        { key: "payments", label: "결제 내역", icon: "💳", count: payments.length },
         { key: "profile", label: "내 정보", icon: "👤" },
     ];
 
@@ -84,9 +153,30 @@ export default function MyPage() {
                             <h1 className="text-[22px] font-bold text-primary-dark">{user?.name || "사용자"}님</h1>
                             <p className="text-[13px] text-[var(--text-light)]">{user?.email} · {user?.role === "PATIENT" ? "일반 환자" : user?.role}</p>
                         </div>
-                        <Link href="/booking" className="btn-accent !py-2.5 !px-5 !text-[12px] no-underline hidden sm:inline-flex">
-                            새 예약 +
-                        </Link>
+                        <div className="hidden sm:flex gap-2">
+                            <Link href="/payment" className="btn-outline !py-2.5 !px-4 !text-[12px] no-underline">
+                                💳 결제
+                            </Link>
+                            <Link href="/booking" className="btn-accent !py-2.5 !px-5 !text-[12px] no-underline">
+                                새 예약 +
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-[var(--border)]">
+                        <div className="text-center">
+                            <div className="text-[18px] font-bold text-primary-dark">{reservations.length}</div>
+                            <div className="text-[11px] text-[var(--text-muted)]">전체 예약</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-[18px] font-bold text-[#2d9f6f]">{prescriptions.length}</div>
+                            <div className="text-[11px] text-[var(--text-muted)]">처방 기록</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-[18px] font-bold text-accent">{totalPaid.toLocaleString()}원</div>
+                            <div className="text-[11px] text-[var(--text-muted)]">총 결제액</div>
+                        </div>
                     </div>
                 </div>
 
@@ -96,16 +186,12 @@ export default function MyPage() {
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-[13px] font-semibold cursor-pointer transition-all border-none whitespace-nowrap ${activeTab === tab.key
-                                    ? "bg-primary text-white"
-                                    : "bg-white text-[var(--text-light)] hover:bg-primary/[0.04]"
-                                }`}
+                            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-[13px] font-semibold cursor-pointer transition-all border-none whitespace-nowrap ${activeTab === tab.key ? "bg-primary text-white" : "bg-white text-[var(--text-light)] hover:bg-primary/[0.04]"}`}
                         >
                             <span>{tab.icon}</span>
                             {tab.label}
-                            {tab.count && tab.count > 0 && (
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === tab.key ? "bg-white/20 text-white" : "bg-accent/10 text-accent"
-                                    }`}>
+                            {tab.count != null && tab.count > 0 && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === tab.key ? "bg-white/20 text-white" : "bg-accent/10 text-accent"}`}>
                                     {tab.count}
                                 </span>
                             )}
@@ -113,10 +199,9 @@ export default function MyPage() {
                     ))}
                 </div>
 
-                {/* Tab Content */}
+                {/* Reservations Tab */}
                 {activeTab === "reservations" && (
                     <div className="animate-fadeIn">
-                        {/* Status Filter */}
                         <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
                             {["전체", "CONFIRMED", "WAITING", "COMPLETED", "CANCELLED"].map((status) => {
                                 const label = status === "전체" ? "전체" : statusMap[status]?.label || status;
@@ -124,10 +209,7 @@ export default function MyPage() {
                                     <button
                                         key={status}
                                         onClick={() => setFilterStatus(status)}
-                                        className={`px-4 py-2 rounded-lg text-[11px] font-semibold cursor-pointer transition-all border-none whitespace-nowrap ${filterStatus === status
-                                                ? "bg-primary/10 text-primary"
-                                                : "bg-white text-[var(--text-muted)] hover:text-primary"
-                                            }`}
+                                        className={`px-4 py-2 rounded-lg text-[11px] font-semibold cursor-pointer transition-all border-none whitespace-nowrap ${filterStatus === status ? "bg-primary/10 text-primary" : "bg-white text-[var(--text-muted)] hover:text-primary"}`}
                                     >
                                         {label}
                                     </button>
@@ -135,7 +217,6 @@ export default function MyPage() {
                             })}
                         </div>
 
-                        {/* Reservation List */}
                         <div className="flex flex-col gap-3">
                             {filteredReservations.map((res) => {
                                 const status = statusMap[res.status] || statusMap.WAITING;
@@ -143,35 +224,41 @@ export default function MyPage() {
                                 return (
                                     <div key={res.id} className={`bg-white rounded-2xl border border-[var(--border)] p-5 transition-all ${isPast ? "opacity-70" : "hover:shadow-md"}`}>
                                         <div className="flex items-center gap-4">
-                                            {/* Date Block */}
-                                            <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${isPast ? "bg-[var(--bg)]" : "bg-gradient-to-br from-primary to-primary-light text-white"
-                                                }`}>
+                                            <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${isPast ? "bg-[var(--bg)]" : "bg-gradient-to-br from-primary to-primary-light text-white"}`}>
                                                 <div className={`text-[10px] font-medium ${isPast ? "text-[var(--text-muted)]" : "opacity-80"}`}>
-                                                    {new Date(res.date).toLocaleDateString("ko-KR", { month: "short" })}
+                                                    {new Date(res.reservationDate).toLocaleDateString("ko-KR", { month: "short" })}
                                                 </div>
                                                 <div className={`text-[18px] font-bold leading-tight ${isPast ? "text-[var(--text-muted)]" : ""}`}>
-                                                    {new Date(res.date).getDate()}
+                                                    {new Date(res.reservationDate).getDate()}
                                                 </div>
                                             </div>
 
-                                            {/* Info */}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-[14px] font-bold text-primary-dark">{res.doctor} 전문의</span>
+                                                    <span className="text-[14px] font-bold text-primary-dark">{res.doctorName} 전문의</span>
                                                     <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ color: status.color, background: status.bg }}>
                                                         {status.label}
                                                     </span>
                                                 </div>
                                                 <div className="text-[12px] text-[var(--text-light)]">
-                                                    {res.dept} · {res.time} · {res.code}
+                                                    {res.departmentName} · {res.reservationTime} · {res.reservationCode}
                                                 </div>
+                                                {res.symptom && (
+                                                    <div className="text-[11px] text-[var(--text-muted)] mt-0.5">증상: {res.symptom}</div>
+                                                )}
                                             </div>
 
-                                            {/* Fee & Action */}
                                             <div className="text-right flex-shrink-0 hidden sm:block">
-                                                <div className="text-[14px] font-bold text-primary-dark">{res.fee.toLocaleString()}원</div>
-                                                {!isPast && (
-                                                    <button className="text-[11px] text-[var(--text-muted)] hover:text-[#ef4444] bg-transparent border-none cursor-pointer mt-1 transition-colors">
+                                                {res.status === "COMPLETED" && (
+                                                    <Link href="/payment" className="text-[11px] text-accent font-semibold no-underline hover:underline">
+                                                        결제하기 →
+                                                    </Link>
+                                                )}
+                                                {(res.status === "CONFIRMED" || res.status === "WAITING") && (
+                                                    <button
+                                                        onClick={() => handleCancel(res.id)}
+                                                        className="text-[11px] text-[var(--text-muted)] hover:text-[#ef4444] bg-transparent border-none cursor-pointer transition-colors"
+                                                    >
                                                         예약 취소
                                                     </button>
                                                 )}
@@ -193,24 +280,102 @@ export default function MyPage() {
                     </div>
                 )}
 
-                {activeTab === "notifications" && (
-                    <div className="animate-fadeIn flex flex-col gap-3">
-                        {mockNotifications.map((noti) => (
-                            <div key={noti.id} className={`bg-white rounded-xl border p-4 flex items-start gap-3 transition-all ${noti.isRead ? "border-[var(--border)] opacity-60" : "border-accent/20 bg-accent/[0.02]"
-                                }`}>
-                                <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${noti.isRead ? "bg-[var(--border)]" : "bg-accent"}`} />
-                                <div className="flex-1">
-                                    <p className="text-[13px] text-[var(--text)] leading-[1.5]">{noti.message}</p>
-                                    <span className="text-[11px] text-[var(--text-muted)] mt-1 block">{noti.date}</span>
-                                </div>
-                                {!noti.isRead && (
-                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-semibold flex-shrink-0">NEW</span>
-                                )}
+                {/* Prescriptions Tab */}
+                {activeTab === "prescriptions" && (
+                    <div className="animate-fadeIn">
+                        {prescriptions.length > 0 ? (
+                            <div className="flex flex-col gap-4">
+                                {prescriptions.map((p) => (
+                                    <div key={p.id} className="bg-white rounded-2xl border border-[var(--border)] p-5">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[14px] font-bold text-primary-dark">{p.doctorName} 전문의</span>
+                                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-accent/[0.08] text-accent font-semibold">
+                                                    {p.diagnosis}
+                                                </span>
+                                            </div>
+                                            <span className="text-[11px] text-[var(--text-muted)]">{p.departmentName}</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div>
+                                                <div className="text-[10px] text-[var(--text-muted)] mb-0.5">약품명</div>
+                                                <div className="text-[13px] font-semibold text-primary-dark">💊 {p.medicineName}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] text-[var(--text-muted)] mb-0.5">용량</div>
+                                                <div className="text-[13px] font-semibold text-primary-dark">{p.dosage}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] text-[var(--text-muted)] mb-0.5">복용법</div>
+                                                <div className="text-[13px] text-[var(--text)]">{p.instruction}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] text-[var(--text-muted)] mb-0.5">처방 기간</div>
+                                                <div className="text-[13px] text-[var(--text)]">{p.startDate} ~ {p.endDate}</div>
+                                            </div>
+                                        </div>
+
+                                        {p.memo && (
+                                            <div className="pt-3 border-t border-[var(--border)]">
+                                                <div className="text-[10px] text-[var(--text-muted)] mb-0.5">의사 메모</div>
+                                                <div className="text-[12px] text-[var(--text-light)] leading-[1.6]">{p.memo}</div>
+                                            </div>
+                                        )}
+
+                                        <div className="text-[11px] text-[var(--text-muted)] mt-3">{p.createdAt?.split("T")[0]}</div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        ) : (
+                            <div className="text-center py-16 bg-white rounded-2xl border border-[var(--border)]">
+                                <div className="text-5xl mb-4">💊</div>
+                                <h3 className="text-[16px] font-bold text-primary-dark mb-2">처방 기록이 없습니다</h3>
+                                <p className="text-[13px] text-[var(--text-muted)]">진료 후 의사가 처방하면 여기에 표시됩니다</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
+                {/* Payments Tab */}
+                {activeTab === "payments" && (
+                    <div className="animate-fadeIn">
+                        {payments.length > 0 ? (
+                            <div className="flex flex-col gap-3">
+                                {payments.map((p) => {
+                                    const isPaid = p.status === "COMPLETED";
+                                    return (
+                                        <div key={p.id} className={`bg-white rounded-2xl border border-[var(--border)] p-5 ${!isPaid && "opacity-60"}`}>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[14px] font-bold text-primary-dark">{p.doctorName} 전문의</span>
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${isPaid ? "bg-[rgba(45,159,111,0.08)] text-[#2d9f6f]" : "bg-[rgba(239,68,68,0.08)] text-[#ef4444]"}`}>
+                                                        {isPaid ? "결제완료" : "취소"}
+                                                    </span>
+                                                </div>
+                                                <span className="text-[11px] text-[var(--text-muted)]">{p.paymentCode}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="text-[12px] text-[var(--text-light)]">
+                                                    {p.departmentName} · {p.reservationDate} · {methodMap[p.method] || p.method}
+                                                </div>
+                                                <div className="text-[15px] font-bold text-accent">{p.amount.toLocaleString()}원</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16 bg-white rounded-2xl border border-[var(--border)]">
+                                <div className="text-5xl mb-4">💳</div>
+                                <h3 className="text-[16px] font-bold text-primary-dark mb-2">결제 내역이 없습니다</h3>
+                                <p className="text-[13px] text-[var(--text-muted)]">진료 완료 후 결제하면 여기에 표시됩니다</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Profile Tab */}
                 {activeTab === "profile" && (
                     <div className="animate-fadeIn max-w-[600px]">
                         <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
@@ -223,7 +388,6 @@ export default function MyPage() {
                                         { label: "이름", value: user?.name || "-" },
                                         { label: "이메일", value: user?.email || "-" },
                                         { label: "회원 유형", value: user?.role === "PATIENT" ? "일반 환자" : user?.role || "-" },
-                                        { label: "가입일", value: "2026년 2월" },
                                     ].map((item, i) => (
                                         <div key={i} className="flex items-center justify-between">
                                             <span className="text-[13px] text-[var(--text-muted)]">{item.label}</span>
