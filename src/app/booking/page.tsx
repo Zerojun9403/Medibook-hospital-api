@@ -1,5 +1,5 @@
 "use client";
-
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -37,7 +37,7 @@ function getCalendarDays(year: number, month: number) {
     return days;
 }
 
-export default function BookingPage() {
+function BookingContent() {
     const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
     const [departments, setDepartments] = useState<Department[]>([]);
@@ -571,5 +571,13 @@ export default function BookingPage() {
                 )}
             </div>
         </div>
+    );
+
+}
+export default function BookingPage() {
+    return (
+        <Suspense fallback={<div>로딩중...</div>}>
+            <BookingContent />
+        </Suspense>
     );
 }
