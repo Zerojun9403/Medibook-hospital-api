@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = "https://medibook-backend-1-zgb5.onrender.com/api";
 
 export const tokenManager = {
   getAccessToken: () => {
