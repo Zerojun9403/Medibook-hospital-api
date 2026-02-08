@@ -80,7 +80,7 @@ export default function LoginPage() {
       if (res.success) {
         const role = res.data.role;
         if (role === "DOCTOR" || role === "ADMIN") {
-          window.location.href = "/dashboard";
+          window.location.href = "/doctor/dashboard";
         } else {
           window.location.href = "/patient/dashboard";
         }
@@ -294,18 +294,16 @@ export default function LoginPage() {
                 이메일
               </label>
               <div
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl border-[1.5px] transition-all duration-200 bg-white ${
-                  activeField === "email"
-                    ? "border-primary shadow-[0_0_0_3px_rgba(27,77,110,0.08)]"
-                    : "border-[var(--border)] hover:border-[var(--text-muted)]"
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl border-[1.5px] transition-all duration-200 bg-white ${activeField === "email"
+                  ? "border-primary shadow-[0_0_0_3px_rgba(27,77,110,0.08)]"
+                  : "border-[var(--border)] hover:border-[var(--text-muted)]"
+                  }`}
               >
                 <div
-                  className={`transition-colors ${
-                    activeField === "email"
-                      ? "text-primary"
-                      : "text-[var(--text-muted)]"
-                  }`}
+                  className={`transition-colors ${activeField === "email"
+                    ? "text-primary"
+                    : "text-[var(--text-muted)]"
+                    }`}
                 >
                   <User />
                 </div>
@@ -336,18 +334,16 @@ export default function LoginPage() {
                 </Link>
               </div>
               <div
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl border-[1.5px] transition-all duration-200 bg-white ${
-                  activeField === "password"
-                    ? "border-primary shadow-[0_0_0_3px_rgba(27,77,110,0.08)]"
-                    : "border-[var(--border)] hover:border-[var(--text-muted)]"
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl border-[1.5px] transition-all duration-200 bg-white ${activeField === "password"
+                  ? "border-primary shadow-[0_0_0_3px_rgba(27,77,110,0.08)]"
+                  : "border-[var(--border)] hover:border-[var(--text-muted)]"
+                  }`}
               >
                 <div
-                  className={`transition-colors ${
-                    activeField === "password"
-                      ? "text-primary"
-                      : "text-[var(--text-muted)]"
-                  }`}
+                  className={`transition-colors ${activeField === "password"
+                    ? "text-primary"
+                    : "text-[var(--text-muted)]"
+                    }`}
                 >
                   <Lock />
                 </div>
@@ -376,11 +372,10 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setRememberMe(!rememberMe)}
-                className={`w-[18px] h-[18px] rounded-[5px] border-[1.5px] flex items-center justify-center cursor-pointer transition-all duration-200 ${
-                  rememberMe
-                    ? "bg-primary border-primary"
-                    : "bg-white border-[var(--border)]"
-                }`}
+                className={`w-[18px] h-[18px] rounded-[5px] border-[1.5px] flex items-center justify-center cursor-pointer transition-all duration-200 ${rememberMe
+                  ? "bg-primary border-primary"
+                  : "bg-white border-[var(--border)]"
+                  }`}
               >
                 {rememberMe && (
                   <svg

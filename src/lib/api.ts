@@ -37,8 +37,9 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "서버 오류가 발생했습니다");
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) throw new Error(data?.message || "서버 오류가 발생했습니다");
   return data;
 }
 

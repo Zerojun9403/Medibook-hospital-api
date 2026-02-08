@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart, Calendar, Clock, Bell, CreditCard, Activity, ChevronRight, Shield } from "@/components/icons/Icons";
+import { reservationAPI, userAPI } from "@/lib/api";
 
 interface User {
   name: string;
@@ -10,17 +11,23 @@ interface User {
   email?: string;
 }
 
-// Mock data - 나중에 API 연동
-const upcomingReservations = [
-  { id: 1, doctor: "김민수", dept: "내과", date: "2026-02-10", time: "10:00", status: "CONFIRMED" },
-  { id: 2, doctor: "이서연", dept: "피부과", date: "2026-02-14", time: "14:30", status: "WAITING" },
-];
+interface Reservation {
+  id: number;
+  reservationCode: string;
+  doctorName: string;
+  departmentName: string;
+  reservationDate: string;
+  reservationTime: string;
+  status: string;
+  symptom: string;
+}
 
-const recentActivity = [
-  { id: 1, text: "김민수 전문의 내과 진료 완료", date: "2026-02-01", type: "complete" },
-  { id: 2, text: "피부과 예약이 확정되었습니다", date: "2026-01-28", type: "confirm" },
-  { id: 3, text: "처방전이 발급되었습니다", date: "2026-01-25", type: "prescription" },
-];
+interface Stats {
+  totalReservations: number;
+  completedReservations: number;
+  upcomingReservations: number;
+  cancelledReservations: number;
+}
 
 const statusMap: Record<string, { label: string; color: string; bg: string }> = {
   CONFIRMED: { label: "확정", color: "#2d9f6f", bg: "rgba(45,159,111,0.08)" },
@@ -32,6 +39,8 @@ const statusMap: Record<string, { label: string; color: string; bg: string }> = 
 
 export default function PatientDashboard() {
   const [user, setUser] = useState<User | null>(null);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [currentTime, setCurrentTime] = useState("");
   const [greeting, setGreeting] = useState("");
 
@@ -51,6 +60,44 @@ export default function PatientDashboard() {
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // API에서 예약 목록 & 통계 가져오기
+  useEffect(() => {
+    reservationAPI.getMyReservations()
+      .then((data) => setReservations(data))
+      .catch(() => setReservations([]));
+
+    userAPI.getStats()
+      .then((data) => setStats(data))
+      .catch(() => setStats(null));
+  }, []);
+
+  const upcomingReservations = reservations.filter(
+    (r) => r.status === "CONFIRMED" || r.status === "WAITING"
+  );
+
+  const recentActivity = reservations.slice(0, 3).map((r) => {
+    const status = statusMap[r.status] || statusMap.WAITING;
+    return {
+      id: r.id,
+      text: `${r.doctorName} 전문의 ${r.departmentName} - ${status.label}`,
+      date: r.reservationDate,
+    };
+  });
+
+  const handleCancel = async (id: number) => {
+    if (!confirm("예약을 취소하시겠습니까?")) return;
+    try {
+      await reservationAPI.cancel(id);
+      // 목록 새로고침
+      const data = await reservationAPI.getMyReservations();
+      setReservations(data);
+      const statsData = await userAPI.getStats();
+      setStats(statsData);
+    } catch (error: any) {
+      alert(error.message || "취소에 실패했습니다.");
+    }
+  };
 
   const logout = () => {
     localStorage.removeItem("accessToken");
@@ -75,13 +122,13 @@ export default function PatientDashboard() {
           </Link>
 
           <div className="flex items-center gap-4">
-            {/* Notification Bell */}
             <button className="relative p-2 rounded-lg hover:bg-[var(--bg)] transition-all bg-transparent border-none cursor-pointer text-[var(--text-light)]">
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ef4444]" />
+              {upcomingReservations.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ef4444]" />
+              )}
             </button>
 
-            {/* User Menu */}
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center text-[13px] font-bold text-primary">
                 {user?.name?.charAt(0) || "?"}
@@ -112,10 +159,10 @@ export default function PatientDashboard() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { icon: <Calendar size={20} />, label: "예정 예약", value: "2건", color: "#1b4d6e", bg: "rgba(27,77,110,0.06)" },
-            { icon: <Clock size={20} />, label: "대기 중", value: "1건", color: "#e8a838", bg: "rgba(232,168,56,0.06)" },
-            { icon: <Activity size={20} />, label: "이번 달 진료", value: "3회", color: "#2d9f6f", bg: "rgba(45,159,111,0.06)" },
-            { icon: <CreditCard size={20} />, label: "미결제", value: "0원", color: "#6b7280", bg: "rgba(107,114,128,0.06)" },
+            { icon: <Calendar size={20} />, label: "전체 예약", value: `${stats?.totalReservations ?? 0}건`, color: "#1b4d6e", bg: "rgba(27,77,110,0.06)" },
+            { icon: <Clock size={20} />, label: "예정 예약", value: `${stats?.upcomingReservations ?? 0}건`, color: "#e8a838", bg: "rgba(232,168,56,0.06)" },
+            { icon: <Activity size={20} />, label: "완료", value: `${stats?.completedReservations ?? 0}건`, color: "#2d9f6f", bg: "rgba(45,159,111,0.06)" },
+            { icon: <CreditCard size={20} />, label: "취소", value: `${stats?.cancelledReservations ?? 0}건`, color: "#6b7280", bg: "rgba(107,114,128,0.06)" },
           ].map((stat, i) => (
             <div key={i} className="bg-white rounded-2xl p-5 border border-[var(--border)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all">
               <div className="flex items-center gap-3 mb-3">
@@ -149,34 +196,42 @@ export default function PatientDashboard() {
                     {upcomingReservations.map((res) => {
                       const status = statusMap[res.status] || statusMap.WAITING;
                       return (
-                        <div key={res.id} className="flex items-center gap-4 p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-primary/20 transition-all cursor-pointer group">
+                        <div key={res.id} className="flex items-center gap-4 p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-primary/20 transition-all group">
                           {/* Date Block */}
                           <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-light flex flex-col items-center justify-center text-white flex-shrink-0">
                             <div className="text-[10px] font-medium opacity-80">
-                              {new Date(res.date).toLocaleDateString("ko-KR", { month: "short" })}
+                              {new Date(res.reservationDate).toLocaleDateString("ko-KR", { month: "short" })}
                             </div>
                             <div className="text-[18px] font-bold leading-tight">
-                              {new Date(res.date).getDate()}
+                              {new Date(res.reservationDate).getDate()}
                             </div>
                           </div>
 
                           {/* Info */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[14px] font-bold text-primary-dark">{res.doctor} 전문의</span>
+                              <span className="text-[14px] font-bold text-primary-dark">{res.doctorName} 전문의</span>
                               <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold" style={{ color: status.color, background: status.bg }}>
                                 {status.label}
                               </span>
                             </div>
                             <div className="text-[12px] text-[var(--text-light)]">
-                              {res.dept} · {res.date} · {res.time}
+                              {res.departmentName} · {res.reservationDate} · {res.reservationTime}
                             </div>
+                            {res.reservationCode && (
+                              <div className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                                예약코드: {res.reservationCode}
+                              </div>
+                            )}
                           </div>
 
-                          {/* Arrow */}
-                          <div className="text-[var(--text-muted)] group-hover:text-primary transition-colors">
-                            <ChevronRight size={18} />
-                          </div>
+                          {/* Cancel Button */}
+                          <button
+                            onClick={() => handleCancel(res.id)}
+                            className="text-[11px] text-[var(--text-muted)] hover:text-[#ef4444] bg-transparent border border-[var(--border)] hover:border-[#ef4444]/30 rounded-lg px-3 py-1.5 cursor-pointer transition-all"
+                          >
+                            취소
+                          </button>
                         </div>
                       );
                     })}
@@ -219,15 +274,19 @@ export default function PatientDashboard() {
             <div className="bg-white rounded-2xl border border-[var(--border)] p-6">
               <h3 className="text-[15px] font-bold text-primary-dark mb-4">최근 활동</h3>
               <div className="flex flex-col gap-3">
-                {recentActivity.map((item) => (
-                  <div key={item.id} className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-accent mt-1.5 flex-shrink-0" />
-                    <div>
-                      <div className="text-[12px] text-[var(--text)] leading-[1.5]">{item.text}</div>
-                      <div className="text-[11px] text-[var(--text-muted)] mt-0.5">{item.date}</div>
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((item) => (
+                    <div key={item.id} className="flex items-start gap-3">
+                      <div className="w-2 h-2 rounded-full bg-accent mt-1.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-[12px] text-[var(--text)] leading-[1.5]">{item.text}</div>
+                        <div className="text-[11px] text-[var(--text-muted)] mt-0.5">{item.date}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-[12px] text-[var(--text-muted)]">최근 활동이 없습니다</p>
+                )}
               </div>
             </div>
 
