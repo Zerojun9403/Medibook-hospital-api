@@ -68,7 +68,7 @@ export default function Header() {
           {isLoggedIn ? (
             <>
               <Link
-                href={isDoctor ? "/doctor/dashboard" : "/patient/dashboard"}
+                href={isDoctor ? "/doctors/dashboard" : "/patient/dashboard"}
                 className="text-primary no-underline text-sm font-semibold px-4 py-2 rounded-md hover:text-accent transition-all"
               >
                 {user?.name}님
@@ -121,7 +121,7 @@ export default function Header() {
             <div className="border-t border-[var(--border)] mt-2 pt-3 flex gap-3">
               {isLoggedIn ? (
                 <>
-                  <Link href={isDoctor ? "/doctor/dashboard" : "/patient/dashboard"} className="btn-outline flex-1 !py-2.5 !text-[13px] text-center">
+                  <Link href={isDoctor ? "/doctors/dashboard" : "/patient/dashboard"} className="btn-outline flex-1 !py-2.5 !text-[13px] text-center">
                     {user?.name}님
                   </Link>
                   <button onClick={() => authAPI.logout()} className="btn-primary flex-1 !py-2.5 !text-[13px]">

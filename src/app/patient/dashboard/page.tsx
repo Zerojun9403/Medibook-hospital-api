@@ -257,9 +257,9 @@ export default function PatientDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { icon: "📅", label: "예약하기", href: "/booking" },
-                  { icon: "🏥", label: "진료과", href: "/departments" },
+                  { icon: "💳", label: "결제", href: "/payment" },
                   { icon: "👨‍⚕️", label: "의료진", href: "/doctors" },
-                  { icon: "📋", label: "진료기록", href: "/mypage" },
+                  { icon: "📋", label: "마이페이지", href: "/mypage" },
                 ].map((item, i) => (
                   <Link key={i} href={item.href}
                     className="no-underline flex flex-col items-center gap-2 p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] hover:border-accent/40 hover:shadow-sm transition-all cursor-pointer">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, ChevronRight, Shield } from "@/components/icons/Icons";
+import { Heart, Shield } from "@/components/icons/Icons";
 import { tokenManager } from "@/lib/api";
 
 const API_BASE = "http://localhost:8080";
@@ -63,60 +63,118 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
     return text ? JSON.parse(text) : null;
 }
 
+declare global {
+    interface Window {
+        TossPayments: any;
+    }
+}
+
 export default function PaymentPage() {
     const [activeTab, setActiveTab] = useState<"pay" | "history">("pay");
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
-    const [showPayModal, setShowPayModal] = useState(false);
-    const [selectedRes, setSelectedRes] = useState<Reservation | null>(null);
-    const [selectedMethod, setSelectedMethod] = useState("CARD");
+    const [tossClientKey, setTossClientKey] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
-    const [paySuccess, setPaySuccess] = useState<Payment | null>(null);
+
+    // 결제 성공 후 URL 파라미터 처리
+    const [payResult, setPayResult] = useState<"success" | "fail" | null>(null);
+    const [payResultMsg, setPayResultMsg] = useState("");
 
     useEffect(() => {
         loadData();
+        loadTossKey();
+        loadTossScript();
+        handlePaymentResult();
     }, []);
 
     const loadData = () => {
-        apiFetch("/api/reservations/my")
-            .then((data) => setReservations(data || []))
-            .catch(() => setReservations([]));
-
-        apiFetch("/api/payments/my")
-            .then((data) => setPayments(data || []))
-            .catch(() => setPayments([]));
+        apiFetch("/api/reservations/my").then(setReservations).catch(() => setReservations([]));
+        apiFetch("/api/payments/my").then(setPayments).catch(() => setPayments([]));
     };
 
-    // 결제 가능한 예약: COMPLETED 상태이고 아직 결제 안 된 것
+    const loadTossKey = async () => {
+        try {
+            const data = await apiFetch("/api/payments/toss/client-key");
+            setTossClientKey(data.clientKey);
+        } catch { }
+    };
+
+    const loadTossScript = () => {
+        if (document.getElementById("toss-sdk")) return;
+        const script = document.createElement("script");
+        script.id = "toss-sdk";
+        script.src = "https://js.tosspayments.com/v1/payment";
+        document.head.appendChild(script);
+    };
+
+    const handlePaymentResult = () => {
+        const params = new URLSearchParams(window.location.search);
+        const paymentKey = params.get("paymentKey");
+        const orderId = params.get("orderId");
+        const amount = params.get("amount");
+
+        if (paymentKey && orderId && amount) {
+            // 토스 결제 승인 요청
+            confirmPayment(paymentKey, orderId, amount);
+            // URL 파라미터 제거
+            window.history.replaceState({}, "", "/payment");
+        }
+
+        // 실패 처리
+        const code = params.get("code");
+        const message = params.get("message");
+        if (code && message) {
+            setPayResult("fail");
+            setPayResultMsg(message);
+            window.history.replaceState({}, "", "/payment");
+        }
+    };
+
+    const confirmPayment = async (paymentKey: string, orderId: string, amount: string) => {
+        try {
+            await apiFetch("/api/payments/toss/confirm", {
+                method: "POST",
+                body: JSON.stringify({ paymentKey, orderId, amount }),
+            });
+            setPayResult("success");
+            setPayResultMsg("결제가 성공적으로 완료되었습니다!");
+            loadData();
+        } catch (e: any) {
+            setPayResult("fail");
+            setPayResultMsg(e.message || "결제 승인에 실패했습니다.");
+        }
+    };
+
     const paidReservationIds = payments.filter((p) => p.status !== "CANCELLED").map((p) => p.reservationId);
     const unpaidReservations = reservations.filter(
         (r) => r.status === "COMPLETED" && !paidReservationIds.includes(r.id)
     );
 
-    const openPayModal = (res: Reservation) => {
-        setSelectedRes(res);
-        setSelectedMethod("CARD");
-        setPaySuccess(null);
-        setShowPayModal(true);
-    };
+    const handleTossPay = async (res: Reservation) => {
+        if (!tossClientKey || !window.TossPayments) {
+            alert("결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+            return;
+        }
 
-    const handlePay = async () => {
-        if (!selectedRes) return;
         setIsProcessing(true);
+
         try {
-            const amount = selectedRes.fee || 30000;
-            const result = await apiFetch("/api/payments", {
-                method: "POST",
-                body: JSON.stringify({
-                    reservationId: selectedRes.id,
-                    amount,
-                    method: selectedMethod,
-                }),
+            const tossPayments = window.TossPayments(tossClientKey);
+            const amount = res.fee || 30000;
+            const orderId = `ORDER_${res.id}_${Date.now()}`;
+
+            await tossPayments.requestPayment("카드", {
+                amount,
+                orderId,
+                orderName: `${res.departmentName} 진료비 - ${res.doctorName}`,
+                customerName: res.patientName,
+                successUrl: `${window.location.origin}/payment?`,
+                failUrl: `${window.location.origin}/payment?`,
             });
-            setPaySuccess(result);
-            loadData();
         } catch (e: any) {
-            alert(e.message || "결제에 실패했습니다.");
+            if (e.code !== "USER_CANCEL") {
+                alert(e.message || "결제 요청에 실패했습니다.");
+            }
         } finally {
             setIsProcessing(false);
         }
@@ -160,11 +218,33 @@ export default function PaymentPage() {
                         <span className="text-accent text-[12px] font-semibold tracking-[0.15em] uppercase">Payment</span>
                     </div>
                     <h1 className="font-serif text-[32px] font-bold text-white mb-2">진료비 결제</h1>
-                    <p className="text-[14px] text-white/50">진료 완료된 예약의 결제를 진행하세요</p>
+                    <p className="text-[14px] text-white/50">토스페이먼츠를 통한 안전한 결제</p>
                 </div>
             </section>
 
             <div className="max-w-[1200px] mx-auto px-6 py-8">
+                {/* Payment Result Banner */}
+                {payResult === "success" && (
+                    <div className="mb-6 p-5 rounded-2xl bg-[rgba(45,159,111,0.06)] border border-[#2d9f6f]/20 flex items-center gap-4">
+                        <div className="text-3xl">✅</div>
+                        <div>
+                            <div className="text-[15px] font-bold text-[#2d9f6f]">결제 완료!</div>
+                            <div className="text-[13px] text-[var(--text-light)]">{payResultMsg}</div>
+                        </div>
+                        <button onClick={() => setPayResult(null)} className="ml-auto text-[var(--text-muted)] bg-transparent border-none cursor-pointer text-lg">✕</button>
+                    </div>
+                )}
+                {payResult === "fail" && (
+                    <div className="mb-6 p-5 rounded-2xl bg-[rgba(239,68,68,0.06)] border border-[#ef4444]/20 flex items-center gap-4">
+                        <div className="text-3xl">❌</div>
+                        <div>
+                            <div className="text-[15px] font-bold text-[#ef4444]">결제 실패</div>
+                            <div className="text-[13px] text-[var(--text-light)]">{payResultMsg}</div>
+                        </div>
+                        <button onClick={() => setPayResult(null)} className="ml-auto text-[var(--text-muted)] bg-transparent border-none cursor-pointer text-lg">✕</button>
+                    </div>
+                )}
+
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                     {[
@@ -203,7 +283,7 @@ export default function PaymentPage() {
                     <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
                         <div className="p-6 pb-4">
                             <h2 className="text-[16px] font-bold text-primary-dark">미결제 진료</h2>
-                            <p className="text-[12px] text-[var(--text-muted)] mt-0.5">진료 완료 후 결제가 필요한 예약</p>
+                            <p className="text-[12px] text-[var(--text-muted)] mt-0.5">진료 완료 후 결제가 필요한 예약 · 토스페이먼츠 결제</p>
                         </div>
                         <div className="px-6 pb-6">
                             {unpaidReservations.length > 0 ? (
@@ -231,10 +311,15 @@ export default function PaymentPage() {
                                             </div>
 
                                             <button
-                                                onClick={() => openPayModal(res)}
-                                                className="text-[12px] text-white bg-accent hover:bg-accent/90 border-none rounded-lg px-4 py-2 cursor-pointer transition-all font-semibold"
+                                                onClick={() => handleTossPay(res)}
+                                                disabled={isProcessing}
+                                                className="text-[12px] text-white bg-[#3182F6] hover:bg-[#2270E0] border-none rounded-lg px-4 py-2.5 cursor-pointer transition-all font-semibold disabled:opacity-50 flex items-center gap-2"
                                             >
-                                                결제하기 →
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <rect width="24" height="24" rx="4" fill="white" fillOpacity="0.2" />
+                                                    <path d="M7 10h10M7 14h6" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                                                </svg>
+                                                {isProcessing ? "처리중..." : "토스로 결제"}
                                             </button>
                                         </div>
                                     ))}
@@ -246,6 +331,20 @@ export default function PaymentPage() {
                                     <p className="text-[12px] text-[var(--text-muted)]">모든 진료비가 결제 완료되었습니다</p>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Toss Payments 안내 */}
+                        <div className="mx-6 mb-6 p-4 rounded-xl bg-[#3182F6]/[0.04] border border-[#3182F6]/10">
+                            <div className="flex items-start gap-3">
+                                <Shield size={16} className="text-[#3182F6] mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <div className="text-[12px] font-semibold text-primary-dark mb-1">토스페이먼츠 안전결제</div>
+                                    <p className="text-[11px] text-[var(--text-light)] leading-[1.6]">
+                                        카드, 간편결제 등 다양한 결제 수단을 지원합니다. 모든 결제 정보는 토스페이먼츠를 통해 암호화되어 안전하게 처리됩니다.
+                                        <span className="text-[#3182F6] font-semibold"> (테스트 모드)</span>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -318,140 +417,6 @@ export default function PaymentPage() {
                     </div>
                 )}
             </div>
-
-            {/* Payment Modal */}
-            {showPayModal && selectedRes && !paySuccess && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6" onClick={() => setShowPayModal(false)}>
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                    <div className="relative bg-white rounded-2xl max-w-[480px] w-full overflow-hidden animate-scaleIn" onClick={(e) => e.stopPropagation()}>
-                        <div className="p-6 border-b border-[var(--border)]">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-[18px] font-bold text-primary-dark">💳 진료비 결제</h2>
-                                <button onClick={() => setShowPayModal(false)} className="w-8 h-8 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] hover:text-primary cursor-pointer transition-all">
-                                    ✕
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="p-6">
-                            {/* 결제 정보 */}
-                            <div className="p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] mb-5">
-                                <div className="text-[12px] text-[var(--text-muted)] mb-3">결제 정보</div>
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex justify-between text-[13px]">
-                                        <span className="text-[var(--text-light)]">예약코드</span>
-                                        <span className="font-medium text-primary-dark">{selectedRes.reservationCode}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[13px]">
-                                        <span className="text-[var(--text-light)]">담당의</span>
-                                        <span className="font-medium text-primary-dark">{selectedRes.doctorName} ({selectedRes.departmentName})</span>
-                                    </div>
-                                    <div className="flex justify-between text-[13px]">
-                                        <span className="text-[var(--text-light)]">진료일</span>
-                                        <span className="font-medium text-primary-dark">{selectedRes.reservationDate}</span>
-                                    </div>
-                                    <div className="border-t border-[var(--border)] my-1" />
-                                    <div className="flex justify-between text-[15px]">
-                                        <span className="font-semibold text-primary-dark">결제 금액</span>
-                                        <span className="font-bold text-accent">{(selectedRes.fee || 30000).toLocaleString()}원</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 결제 수단 */}
-                            <div className="mb-5">
-                                <div className="text-[12px] font-semibold text-primary-dark mb-3">결제 수단 선택</div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {[
-                                        { key: "CARD", label: "💳 카드결제" },
-                                        { key: "KAKAO_PAY", label: "🟡 카카오페이" },
-                                        { key: "NAVER_PAY", label: "🟢 네이버페이" },
-                                        { key: "TRANSFER", label: "🏦 계좌이체" },
-                                    ].map((m) => (
-                                        <button
-                                            key={m.key}
-                                            onClick={() => setSelectedMethod(m.key)}
-                                            className={`p-3 rounded-xl text-[12px] font-semibold cursor-pointer transition-all border-[1.5px] ${selectedMethod === m.key
-                                                ? "border-primary bg-primary/[0.04] text-primary"
-                                                : "border-[var(--border)] bg-white text-[var(--text-light)] hover:border-primary/30"
-                                                }`}
-                                        >
-                                            {m.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* 보안 안내 */}
-                            <div className="p-3 rounded-lg bg-primary/[0.03] border border-primary/[0.08] mb-5">
-                                <div className="flex items-start gap-2">
-                                    <Shield size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                                    <p className="text-[11px] text-[var(--text-light)] leading-[1.6]">
-                                        모든 결제 정보는 암호화되어 안전하게 처리됩니다.
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* 버튼 */}
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowPayModal(false)}
-                                    className="btn-outline flex-1 !py-3 !text-[13px]"
-                                >
-                                    취소
-                                </button>
-                                <button
-                                    onClick={handlePay}
-                                    disabled={isProcessing}
-                                    className="btn-accent flex-1 !py-3 !text-[13px] !font-bold disabled:opacity-60"
-                                >
-                                    {isProcessing ? "결제 처리중..." : `${(selectedRes.fee || 30000).toLocaleString()}원 결제하기`}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Payment Success Modal */}
-            {showPayModal && paySuccess && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6" onClick={() => setShowPayModal(false)}>
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                    <div className="relative bg-white rounded-2xl max-w-[420px] w-full overflow-hidden animate-scaleIn" onClick={(e) => e.stopPropagation()}>
-                        <div className="p-8 text-center">
-                            <div className="w-16 h-16 rounded-full bg-[rgba(45,159,111,0.1)] flex items-center justify-center mx-auto mb-4">
-                                <span className="text-3xl">✅</span>
-                            </div>
-                            <h2 className="text-[20px] font-bold text-primary-dark mb-2">결제 완료!</h2>
-                            <p className="text-[13px] text-[var(--text-light)] mb-5">진료비 결제가 성공적으로 처리되었습니다</p>
-
-                            <div className="p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] mb-5 text-left">
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex justify-between text-[13px]">
-                                        <span className="text-[var(--text-muted)]">결제코드</span>
-                                        <span className="font-mono font-bold text-primary">{paySuccess.paymentCode}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[13px]">
-                                        <span className="text-[var(--text-muted)]">결제수단</span>
-                                        <span className="font-medium text-[var(--text)]">{methodMap[paySuccess.method]}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[15px] border-t border-[var(--border)] pt-2 mt-1">
-                                        <span className="font-semibold text-primary-dark">결제금액</span>
-                                        <span className="font-bold text-accent">{paySuccess.amount.toLocaleString()}원</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => setShowPayModal(false)}
-                                className="btn-primary w-full !py-3 !text-[14px]"
-                            >
-                                확인
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
