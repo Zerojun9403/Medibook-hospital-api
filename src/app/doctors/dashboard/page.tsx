@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Heart, Calendar, Clock, Bell, Activity, ChevronRight, Shield } from "@/components/icons/Icons";
 import { tokenManager } from "@/lib/api";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "https://medibook-backend-1-zgb5.onrender.com";
 
 interface User {
     name: string;

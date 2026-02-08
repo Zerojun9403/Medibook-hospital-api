@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Heart, Search, Star, ChevronRight, Clock } from "@/components/icons/Icons";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "https://medibook-backend-1-zgb5.onrender.com";
 
 interface Doctor {
     id: number;

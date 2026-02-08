@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Heart, Shield } from "@/components/icons/Icons";
 import { tokenManager } from "@/lib/api";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "https://medibook-backend-1-zgb5.onrender.com";
 
 interface Reservation {
     id: number;
