@@ -36,18 +36,18 @@ interface Payment {
 }
 
 const methodMap: Record<string, string> = {
-    CARD: "?�� 카드결제",
-    CASH: "?�� ?�금결제",
-    TRANSFER: "?�� 계좌?�체",
-    KAKAO_PAY: "?�� 카카?�페??,
-    NAVER_PAY: "?�� ?�이버페??,
+    CARD: "?�� 카드결제",
+    CASH: "?�� ?�금결제",
+    TRANSFER: "?�� 계좌?�체",
+    KAKAO_PAY: "?�� 카카?�페??,
+    NAVER_PAY: "?�� ?�이버페??,
 };
 
 const paymentStatusMap: Record<string, { label: string; color: string; bg: string }> = {
-    PENDING: { label: "?��?, color: "#e8a838", bg: "rgba(232,168,56,0.08)" },
-    COMPLETED: { label: "?�료", color: "#2d9f6f", bg: "rgba(45,159,111,0.08)" },
+    PENDING: { label: "?��?, color: "#e8a838", bg: "rgba(232,168,56,0.08)" },
+    COMPLETED: { label: "?�료", color: "#2d9f6f", bg: "rgba(45,159,111,0.08)" },
     CANCELLED: { label: "취소", color: "#ef4444", bg: "rgba(239,68,68,0.08)" },
-    REFUNDED: { label: "?�불", color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
+    REFUNDED: { label: "?�불", color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
 };
 
 async function apiFetch(endpoint: string, options: RequestInit = {}) {
@@ -59,7 +59,7 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
     if (token) headers["Authorization"] = `Bearer ${token}`;
     const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
     const text = await res.text();
-    if (!res.ok) throw new Error(text ? JSON.parse(text).message || "?�청 ?�패" : "?�청 ?�패");
+    if (!res.ok) throw new Error(text ? JSON.parse(text).message || "?�청 ?�패" : "?�청 ?�패");
     return text ? JSON.parse(text) : null;
 }
 
@@ -76,7 +76,7 @@ export default function PaymentPage() {
     const [tossClientKey, setTossClientKey] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // 결제 ?�공 ??URL ?�라미터 처리
+    // 결제 ?�공 ??URL ?�라미터 처리
     const [payResult, setPayResult] = useState<"success" | "fail" | null>(null);
     const [payResultMsg, setPayResultMsg] = useState("");
 
@@ -114,13 +114,13 @@ export default function PaymentPage() {
         const amount = params.get("amount");
 
         if (paymentKey && orderId && amount) {
-            // ?�스 결제 ?�인 ?�청
+            // ?�스 결제 ?�인 ?�청
             confirmPayment(paymentKey, orderId, amount);
-            // URL ?�라미터 ?�거
+            // URL ?�라미터 ?�거
             window.history.replaceState({}, "", "/payment");
         }
 
-        // ?�패 처리
+        // ?�패 처리
         const code = params.get("code");
         const message = params.get("message");
         if (code && message) {
@@ -137,11 +137,11 @@ export default function PaymentPage() {
                 body: JSON.stringify({ paymentKey, orderId, amount }),
             });
             setPayResult("success");
-            setPayResultMsg("결제가 ?�공?�으�??�료?�었?�니??");
+            setPayResultMsg("결제가 ?�공?�으�??�료?�었?�니??");
             loadData();
         } catch (e: any) {
             setPayResult("fail");
-            setPayResultMsg(e.message || "결제 ?�인???�패?�습?�다.");
+            setPayResultMsg(e.message || "결제 ?�인???�패?�습?�다.");
         }
     };
 
@@ -152,7 +152,7 @@ export default function PaymentPage() {
 
     const handleTossPay = async (res: Reservation) => {
         if (!tossClientKey || !window.TossPayments) {
-            alert("결제 모듈??불러?�는 중입?�다. ?�시 ???�시 ?�도?�주?�요.");
+            alert("결제 모듈??불러?�는 중입?�다. ?�시 ???�시 ?�도?�주?�요.");
             return;
         }
 
@@ -166,14 +166,14 @@ export default function PaymentPage() {
             await tossPayments.requestPayment("카드", {
                 amount,
                 orderId,
-                orderName: `${res.departmentName} 진료�?- ${res.doctorName}`,
+                orderName: `${res.departmentName} 진료�?- ${res.doctorName}`,
                 customerName: res.patientName,
                 successUrl: `${window.location.origin}/payment?`,
                 failUrl: `${window.location.origin}/payment?`,
             });
         } catch (e: any) {
             if (e.code !== "USER_CANCEL") {
-                alert(e.message || "결제 ?�청???�패?�습?�다.");
+                alert(e.message || "결제 ?�청???�패?�습?�다.");
             }
         } finally {
             setIsProcessing(false);
@@ -181,12 +181,12 @@ export default function PaymentPage() {
     };
 
     const handleCancelPayment = async (paymentId: number) => {
-        if (!confirm("결제�?취소?�시겠습?�까?")) return;
+        if (!confirm("결제�?취소?�시겠습?�까?")) return;
         try {
             await apiFetch(`/api/payments/${paymentId}/cancel`, { method: "PATCH" });
             loadData();
         } catch (e: any) {
-            alert(e.message || "취소???�패?�습?�다.");
+            alert(e.message || "취소???�패?�습?�다.");
         }
     };
 
@@ -204,7 +204,7 @@ export default function PaymentPage() {
                         <div className="font-serif text-lg font-bold text-primary-dark leading-tight">MediBook</div>
                     </Link>
                     <Link href="/patient/dashboard" className="text-[13px] text-[var(--text-muted)] no-underline hover:text-primary transition-colors">
-                        ???�?�보?�로
+                        ???�?�보?�로
                     </Link>
                 </div>
             </header>
@@ -217,8 +217,8 @@ export default function PaymentPage() {
                         <div className="h-px w-8 bg-accent" />
                         <span className="text-accent text-[12px] font-semibold tracking-[0.15em] uppercase">Payment</span>
                     </div>
-                    <h1 className="font-serif text-[32px] font-bold text-white mb-2">진료�?결제</h1>
-                    <p className="text-[14px] text-white/50">?�스?�이먼츠�??�한 ?�전??결제</p>
+                    <h1 className="font-serif text-[32px] font-bold text-white mb-2">진료�?결제</h1>
+                    <p className="text-[14px] text-white/50">?�스?�이먼츠�??�한 ?�전??결제</p>
                 </div>
             </section>
 
@@ -228,7 +228,7 @@ export default function PaymentPage() {
                     <div className="mb-6 p-5 rounded-2xl bg-[rgba(45,159,111,0.06)] border border-[#2d9f6f]/20 flex items-center gap-4">
                         <div className="text-3xl">??/div>
                         <div>
-                            <div className="text-[15px] font-bold text-[#2d9f6f]">결제 ?�료!</div>
+                            <div className="text-[15px] font-bold text-[#2d9f6f]">결제 ?�료!</div>
                             <div className="text-[13px] text-[var(--text-light)]">{payResultMsg}</div>
                         </div>
                         <button onClick={() => setPayResult(null)} className="ml-auto text-[var(--text-muted)] bg-transparent border-none cursor-pointer text-lg">??/button>
@@ -238,7 +238,7 @@ export default function PaymentPage() {
                     <div className="mb-6 p-5 rounded-2xl bg-[rgba(239,68,68,0.06)] border border-[#ef4444]/20 flex items-center gap-4">
                         <div className="text-3xl">??/div>
                         <div>
-                            <div className="text-[15px] font-bold text-[#ef4444]">결제 ?�패</div>
+                            <div className="text-[15px] font-bold text-[#ef4444]">결제 ?�패</div>
                             <div className="text-[13px] text-[var(--text-light)]">{payResultMsg}</div>
                         </div>
                         <button onClick={() => setPayResult(null)} className="ml-auto text-[var(--text-muted)] bg-transparent border-none cursor-pointer text-lg">??/button>
@@ -248,9 +248,9 @@ export default function PaymentPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                     {[
-                        { icon: "?��", label: "미결??진료", value: `${unpaidReservations.length}�?, color: "#e8a838" },
-                        { icon: "??, label: "결제 ?�료", value: `${payments.filter((p) => p.status === "COMPLETED").length}�?, color: "#2d9f6f" },
-                        { icon: "?��", label: "�?결제??, value: `${totalPaid.toLocaleString()}??, color: "#1b4d6e" },
+                        { icon: "?��", label: "미결??진료", value: `${unpaidReservations.length}�?, color: "#e8a838" },
+                        { icon: "??, label: "결제 ?�료", value: `${payments.filter((p) => p.status === "COMPLETED").length}�?, color: "#2d9f6f" },
+                        { icon: "?��", label: "�?결제??, value: `${totalPaid.toLocaleString()}??, color: "#1b4d6e" },
                     ].map((stat, i) => (
                         <div key={i} className="bg-white rounded-2xl p-5 border border-[var(--border)]">
                             <div className="flex items-center gap-3 mb-3">
@@ -268,13 +268,13 @@ export default function PaymentPage() {
                         onClick={() => setActiveTab("pay")}
                         className={`px-5 py-2.5 rounded-xl text-[13px] font-semibold cursor-pointer transition-all border-none ${activeTab === "pay" ? "bg-primary text-white" : "bg-white text-[var(--text-muted)] hover:text-primary"}`}
                     >
-                        ?�� 결제?�기
+                        ?�� 결제?�기
                     </button>
                     <button
                         onClick={() => setActiveTab("history")}
                         className={`px-5 py-2.5 rounded-xl text-[13px] font-semibold cursor-pointer transition-all border-none ${activeTab === "history" ? "bg-primary text-white" : "bg-white text-[var(--text-muted)] hover:text-primary"}`}
                     >
-                        ?�� 결제 ?�역
+                        ?�� 결제 ?�역
                     </button>
                 </div>
 
@@ -283,7 +283,7 @@ export default function PaymentPage() {
                     <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
                         <div className="p-6 pb-4">
                             <h2 className="text-[16px] font-bold text-primary-dark">미결??진료</h2>
-                            <p className="text-[12px] text-[var(--text-muted)] mt-0.5">진료 ?�료 ??결제가 ?�요???�약 · ?�스?�이먼츠 결제</p>
+                            <p className="text-[12px] text-[var(--text-muted)] mt-0.5">진료 ?�료 ??결제가 ?�요???�약 · ?�스?�이먼츠 결제</p>
                         </div>
                         <div className="px-6 pb-6">
                             {unpaidReservations.length > 0 ? (
@@ -301,9 +301,9 @@ export default function PaymentPage() {
 
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-[14px] font-bold text-primary-dark">{res.doctorName} ?�문??/span>
+                                                    <span className="text-[14px] font-bold text-primary-dark">{res.doctorName} ?�문??/span>
                                                     <span className="text-[11px] px-2 py-0.5 rounded-full bg-[rgba(45,159,111,0.08)] text-[#2d9f6f] font-semibold">
-                                                        진료?�료
+                                                        진료?�료
                                                     </span>
                                                 </div>
                                                 <div className="text-[12px] text-[var(--text-light)]">{res.departmentName} · {res.reservationDate}</div>
@@ -319,7 +319,7 @@ export default function PaymentPage() {
                                                     <rect width="24" height="24" rx="4" fill="white" fillOpacity="0.2" />
                                                     <path d="M7 10h10M7 14h6" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
                                                 </svg>
-                                                {isProcessing ? "처리�?.." : "?�스�?결제"}
+                                                {isProcessing ? "처리�?.." : "?�스�?결제"}
                                             </button>
                                         </div>
                                     ))}
@@ -327,21 +327,21 @@ export default function PaymentPage() {
                             ) : (
                                 <div className="text-center py-12">
                                     <div className="text-4xl mb-3">??/div>
-                                    <p className="text-[14px] font-semibold text-primary-dark mb-1">미결??진료가 ?�습?�다</p>
-                                    <p className="text-[12px] text-[var(--text-muted)]">모든 진료비�? 결제 ?�료?�었?�니??/p>
+                                    <p className="text-[14px] font-semibold text-primary-dark mb-1">미결??진료가 ?�습?�다</p>
+                                    <p className="text-[12px] text-[var(--text-muted)]">모든 진료비�? 결제 ?�료?�었?�니??/p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Toss Payments ?�내 */}
+                        {/* Toss Payments ?�내 */}
                         <div className="mx-6 mb-6 p-4 rounded-xl bg-[#3182F6]/[0.04] border border-[#3182F6]/10">
                             <div className="flex items-start gap-3">
                                 <Shield size={16} className="text-[#3182F6] mt-0.5 flex-shrink-0" />
                                 <div>
-                                    <div className="text-[12px] font-semibold text-primary-dark mb-1">?�스?�이먼츠 ?�전결제</div>
+                                    <div className="text-[12px] font-semibold text-primary-dark mb-1">?�스?�이먼츠 ?�전결제</div>
                                     <p className="text-[11px] text-[var(--text-light)] leading-[1.6]">
-                                        카드, 간편결제 ???�양??결제 ?�단??지?�합?�다. 모든 결제 ?�보???�스?�이먼츠�??�해 ?�호?�되???�전?�게 처리?�니??
-                                        <span className="text-[#3182F6] font-semibold"> (?�스??모드)</span>
+                                        카드, 간편결제 ???�양??결제 ?�단??지?�합?�다. 모든 결제 ?�보???�스?�이먼츠�??�해 ?�호?�되???�전?�게 처리?�니??
+                                        <span className="text-[#3182F6] font-semibold"> (?�스??모드)</span>
                                     </p>
                                 </div>
                             </div>
@@ -353,8 +353,8 @@ export default function PaymentPage() {
                 {activeTab === "history" && (
                     <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
                         <div className="p-6 pb-4">
-                            <h2 className="text-[16px] font-bold text-primary-dark">결제 ?�역</h2>
-                            <p className="text-[12px] text-[var(--text-muted)] mt-0.5">�?{payments.length}�?/p>
+                            <h2 className="text-[16px] font-bold text-primary-dark">결제 ?�역</h2>
+                            <p className="text-[12px] text-[var(--text-muted)] mt-0.5">�?{payments.length}�?/p>
                         </div>
                         <div className="px-6 pb-6">
                             {payments.length > 0 ? (
@@ -365,7 +365,7 @@ export default function PaymentPage() {
                                             <div key={p.id} className="p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
                                                 <div className="flex items-center justify-between mb-3">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-[14px] font-bold text-primary-dark">{p.doctorName} ?�문??/span>
+                                                        <span className="text-[14px] font-bold text-primary-dark">{p.doctorName} ?�문??/span>
                                                         <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold" style={{ color: status.color, background: status.bg }}>
                                                             {status.label}
                                                         </span>
@@ -375,7 +375,7 @@ export default function PaymentPage() {
 
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                                                     <div>
-                                                        <div className="text-[10px] text-[var(--text-muted)] mb-0.5">진료�?/div>
+                                                        <div className="text-[10px] text-[var(--text-muted)] mb-0.5">진료�?/div>
                                                         <div className="text-[12px] text-[var(--text)]">{p.departmentName}</div>
                                                     </div>
                                                     <div>
@@ -383,7 +383,7 @@ export default function PaymentPage() {
                                                         <div className="text-[12px] text-[var(--text)]">{p.reservationDate}</div>
                                                     </div>
                                                     <div>
-                                                        <div className="text-[10px] text-[var(--text-muted)] mb-0.5">결제 ?�단</div>
+                                                        <div className="text-[10px] text-[var(--text-muted)] mb-0.5">결제 ?�단</div>
                                                         <div className="text-[12px] text-[var(--text)]">{methodMap[p.method] || p.method}</div>
                                                     </div>
                                                     <div>
@@ -409,8 +409,8 @@ export default function PaymentPage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-12">
-                                    <div className="text-4xl mb-3">?��</div>
-                                    <p className="text-[14px] text-[var(--text-muted)]">결제 ?�역???�습?�다</p>
+                                    <div className="text-4xl mb-3">?��</div>
+                                    <p className="text-[14px] text-[var(--text-muted)]">결제 ?�역???�습?�다</p>
                                 </div>
                             )}
                         </div>

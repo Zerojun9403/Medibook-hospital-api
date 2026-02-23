@@ -43,10 +43,10 @@ interface Prescription {
 }
 
 const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-    CONFIRMED: { label: "?�정", color: "#2d9f6f", bg: "rgba(45,159,111,0.08)" },
-    WAITING: { label: "?�기중", color: "#e8a838", bg: "rgba(232,168,56,0.08)" },
-    IN_PROGRESS: { label: "진료�?, color: "#2a6f97", bg: "rgba(42,111,151,0.08)" },
-    COMPLETED: { label: "?�료", color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
+    CONFIRMED: { label: "?�정", color: "#2d9f6f", bg: "rgba(45,159,111,0.08)" },
+    WAITING: { label: "?�기중", color: "#e8a838", bg: "rgba(232,168,56,0.08)" },
+    IN_PROGRESS: { label: "진료�?, color: "#2a6f97", bg: "rgba(42,111,151,0.08)" },
+    COMPLETED: { label: "?�료", color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
     CANCELLED: { label: "취소", color: "#ef4444", bg: "rgba(239,68,68,0.08)" },
 };
 
@@ -59,7 +59,7 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
     if (token) headers["Authorization"] = `Bearer ${token}`;
     const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
     const text = await res.text();
-    if (!res.ok) throw new Error(text ? JSON.parse(text).message : "?�청 ?�패");
+    if (!res.ok) throw new Error(text ? JSON.parse(text).message : "?�청 ?�패");
     return text ? JSON.parse(text) : null;
 }
 
@@ -93,7 +93,7 @@ export default function DoctorDashboard() {
         const updateTime = () => {
             const now = new Date();
             const h = now.getHours();
-            setGreeting(h < 12 ? "좋�? ?�침?�에?? : h < 18 ? "좋�? ?�후?�요" : "좋�? ?�?�이?�요");
+            setGreeting(h < 12 ? "좋�? ?�침?�에?? : h < 18 ? "좋�? ?�후?�요" : "좋�? ?�?�이?�요");
             setCurrentTime(
                 now.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" })
             );
@@ -144,7 +144,7 @@ export default function DoctorDashboard() {
     const handlePrescriptionSubmit = async () => {
         if (!selectedReservation) return;
         if (!prescriptionForm.diagnosis || !prescriptionForm.medicineName || !prescriptionForm.dosage || !prescriptionForm.instruction || !prescriptionForm.endDate) {
-            alert("?�수 ??��??모두 ?�력?�주?�요.");
+            alert("?�수 ??��??모두 ?�력?�주?�요.");
             return;
         }
 
@@ -160,9 +160,9 @@ export default function DoctorDashboard() {
             });
             setShowPrescriptionModal(false);
             loadData();
-            alert("?�약기록???�록?�었?�니??");
+            alert("?�약기록???�록?�었?�니??");
         } catch (error: any) {
-            alert(error.message || "?�록???�패?�습?�다.");
+            alert(error.message || "?�록???�패?�습?�다.");
         } finally {
             setIsSubmitting(false);
         }
@@ -201,13 +201,13 @@ export default function DoctorDashboard() {
                                 {user?.name?.charAt(0) || "?"}
                             </div>
                             <div className="hidden sm:block">
-                                <div className="text-[13px] font-semibold text-primary-dark">{user?.name} ?�문??/div>
+                                <div className="text-[13px] font-semibold text-primary-dark">{user?.name} ?�문??/div>
                                 <div className="text-[11px] text-[var(--text-muted)]">{user?.email}</div>
                             </div>
                         </div>
 
                         <button onClick={logout} className="text-[12px] text-[var(--text-muted)] hover:text-primary font-medium bg-transparent border-none cursor-pointer transition-colors">
-                            로그?�웃
+                            로그?�웃
                         </button>
                     </div>
                 </div>
@@ -218,18 +218,18 @@ export default function DoctorDashboard() {
                 <div className="mb-8">
                     <div className="text-[13px] text-accent font-semibold mb-1">{currentTime}</div>
                     <h1 className="text-[28px] font-bold text-primary-dark mb-1">
-                        {greeting}, <span className="text-accent">{user?.name}</span> ?�문?�님 ?��
+                        {greeting}, <span className="text-accent">{user?.name}</span> ?�문?�님 ?��
                     </h1>
-                    <p className="text-[14px] text-[var(--text-light)]">?�늘??진료 ?�정???�인?�세??/p>
+                    <p className="text-[14px] text-[var(--text-light)]">?�늘??진료 ?�정???�인?�세??/p>
                 </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     {[
-                        { icon: <Calendar size={20} />, label: "?�늘 진료", value: `${todayReservations.length}�?, color: "#1b4d6e", bg: "rgba(27,77,110,0.06)" },
-                        { icon: <Clock size={20} />, label: "?�정 ?�약", value: `${confirmedCount}�?, color: "#e8a838", bg: "rgba(232,168,56,0.06)" },
-                        { icon: <Activity size={20} />, label: "?�료 진료", value: `${completedCount}�?, color: "#2d9f6f", bg: "rgba(45,159,111,0.06)" },
-                        { icon: <Shield size={20} />, label: "처방 기록", value: `${prescriptions.length}�?, color: "#6b7280", bg: "rgba(107,114,128,0.06)" },
+                        { icon: <Calendar size={20} />, label: "?�늘 진료", value: `${todayReservations.length}�?, color: "#1b4d6e", bg: "rgba(27,77,110,0.06)" },
+                        { icon: <Clock size={20} />, label: "?�정 ?�약", value: `${confirmedCount}�?, color: "#e8a838", bg: "rgba(232,168,56,0.06)" },
+                        { icon: <Activity size={20} />, label: "?�료 진료", value: `${completedCount}�?, color: "#2d9f6f", bg: "rgba(45,159,111,0.06)" },
+                        { icon: <Shield size={20} />, label: "처방 기록", value: `${prescriptions.length}�?, color: "#6b7280", bg: "rgba(107,114,128,0.06)" },
                     ].map((stat, i) => (
                         <div key={i} className="bg-white rounded-2xl p-5 border border-[var(--border)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all">
                             <div className="flex items-center gap-3 mb-3">
@@ -249,12 +249,12 @@ export default function DoctorDashboard() {
                         onClick={() => setActiveTab("reservations")}
                         className={`px-5 py-2.5 rounded-xl text-[13px] font-semibold cursor-pointer transition-all border-none ${activeTab === "reservations" ? "bg-primary text-white" : "bg-white text-[var(--text-muted)] hover:text-primary border border-[var(--border)]"}`}
                     >
-                        ?�� ?�약 관�?                    </button>
+                        ?�� ?�약 관�?                    </button>
                     <button
                         onClick={() => setActiveTab("prescriptions")}
                         className={`px-5 py-2.5 rounded-xl text-[13px] font-semibold cursor-pointer transition-all border-none ${activeTab === "prescriptions" ? "bg-primary text-white" : "bg-white text-[var(--text-muted)] hover:text-primary border border-[var(--border)]"}`}
                     >
-                        ?�� ?�약 기록
+                        ?�� ?�약 기록
                     </button>
                 </div>
 
@@ -266,14 +266,14 @@ export default function DoctorDashboard() {
                             <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
                                 <div className="flex items-center justify-between p-6 pb-4">
                                     <div>
-                                        <h2 className="text-[16px] font-bold text-primary-dark">?�약 목록</h2>
-                                        <p className="text-[12px] text-[var(--text-muted)] mt-0.5">?�자 ?�약 ?�황</p>
+                                        <h2 className="text-[16px] font-bold text-primary-dark">?�약 목록</h2>
+                                        <p className="text-[12px] text-[var(--text-muted)] mt-0.5">?�자 ?�약 ?�황</p>
                                     </div>
                                     <div className="flex gap-2">
                                         {[
-                                            { key: "ALL", label: "?�체" },
-                                            { key: "CONFIRMED", label: "?�정" },
-                                            { key: "COMPLETED", label: "?�료" },
+                                            { key: "ALL", label: "?�체" },
+                                            { key: "CONFIRMED", label: "?�정" },
+                                            { key: "COMPLETED", label: "?�료" },
                                         ].map((f) => (
                                             <button
                                                 key={f.key}
@@ -304,7 +304,7 @@ export default function DoctorDashboard() {
 
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-2 mb-1">
-                                                                <span className="text-[14px] font-bold text-primary-dark">{res.patientName} ?�자</span>
+                                                                <span className="text-[14px] font-bold text-primary-dark">{res.patientName} ?�자</span>
                                                                 <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold" style={{ color: status.color, background: status.bg }}>
                                                                     {status.label}
                                                                 </span>
@@ -323,24 +323,24 @@ export default function DoctorDashboard() {
                                                             {res.status === "CONFIRMED" && (
                                                                 <button
                                                                     onClick={async () => {
-                                                                        if (!confirm(`${res.patientName} ?�자??진료�??�료 처리?�시겠습?�까?`)) return;
+                                                                        if (!confirm(`${res.patientName} ?�자??진료�??�료 처리?�시겠습?�까?`)) return;
                                                                         try {
                                                                             await apiFetch(`/api/reservations/${res.id}/complete`, { method: "PATCH" });
                                                                             loadData();
                                                                         } catch (e: any) {
-                                                                            alert(e.message || "처리 ?�패");
+                                                                            alert(e.message || "처리 ?�패");
                                                                         }
                                                                     }}
                                                                     className="text-[11px] text-[#2d9f6f] hover:text-white hover:bg-[#2d9f6f] bg-[rgba(45,159,111,0.06)] border border-[#2d9f6f]/20 hover:border-[#2d9f6f] rounded-lg px-3 py-1.5 cursor-pointer transition-all font-semibold"
                                                                 >
-                                                                    ???�료
+                                                                    ???�료
                                                                 </button>
                                                             )}
                                                             <button
                                                                 onClick={() => openPrescriptionModal(res)}
                                                                 className="text-[11px] text-primary hover:text-white hover:bg-primary bg-primary/[0.06] border border-primary/20 hover:border-primary rounded-lg px-3 py-1.5 cursor-pointer transition-all font-semibold"
                                                             >
-                                                                ?�� 처방
+                                                                ?�� 처방
                                                             </button>
                                                         </div>
                                                     </div>
@@ -349,8 +349,8 @@ export default function DoctorDashboard() {
                                         </div>
                                     ) : (
                                         <div className="text-center py-10">
-                                            <div className="text-4xl mb-3">?��</div>
-                                            <p className="text-[14px] text-[var(--text-muted)]">?�약???�습?�다</p>
+                                            <div className="text-4xl mb-3">?��</div>
+                                            <p className="text-[14px] text-[var(--text-muted)]">?�약???�습?�다</p>
                                         </div>
                                     )}
                                 </div>
@@ -361,8 +361,8 @@ export default function DoctorDashboard() {
                         {activeTab === "prescriptions" && (
                             <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
                                 <div className="p-6 pb-4">
-                                    <h2 className="text-[16px] font-bold text-primary-dark">?�약 기록</h2>
-                                    <p className="text-[12px] text-[var(--text-muted)] mt-0.5">처방???�약 ?�역</p>
+                                    <h2 className="text-[16px] font-bold text-primary-dark">?�약 기록</h2>
+                                    <p className="text-[12px] text-[var(--text-muted)] mt-0.5">처방???�약 ?�역</p>
                                 </div>
 
                                 <div className="px-6 pb-6">
@@ -372,7 +372,7 @@ export default function DoctorDashboard() {
                                                 <div key={p.id} className="p-5 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-[14px] font-bold text-primary-dark">{p.patientName} ?�자</span>
+                                                            <span className="text-[14px] font-bold text-primary-dark">{p.patientName} ?�자</span>
                                                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-accent/[0.08] text-accent font-semibold">
                                                                 {p.diagnosis}
                                                             </span>
@@ -384,15 +384,15 @@ export default function DoctorDashboard() {
 
                                                     <div className="grid grid-cols-2 gap-3 mb-3">
                                                         <div>
-                                                            <div className="text-[10px] text-[var(--text-muted)] mb-0.5">?�품�?/div>
-                                                            <div className="text-[13px] font-semibold text-primary-dark">?�� {p.medicineName}</div>
+                                                            <div className="text-[10px] text-[var(--text-muted)] mb-0.5">?�품�?/div>
+                                                            <div className="text-[13px] font-semibold text-primary-dark">?�� {p.medicineName}</div>
                                                         </div>
                                                         <div>
-                                                            <div className="text-[10px] text-[var(--text-muted)] mb-0.5">?�량</div>
+                                                            <div className="text-[10px] text-[var(--text-muted)] mb-0.5">?�량</div>
                                                             <div className="text-[13px] font-semibold text-primary-dark">{p.dosage}</div>
                                                         </div>
                                                         <div>
-                                                            <div className="text-[10px] text-[var(--text-muted)] mb-0.5">복용�?/div>
+                                                            <div className="text-[10px] text-[var(--text-muted)] mb-0.5">복용�?/div>
                                                             <div className="text-[13px] text-[var(--text)]">{p.instruction}</div>
                                                         </div>
                                                         <div>
@@ -403,7 +403,7 @@ export default function DoctorDashboard() {
 
                                                     {p.memo && (
                                                         <div className="pt-3 border-t border-[var(--border)]">
-                                                            <div className="text-[10px] text-[var(--text-muted)] mb-0.5">?�사 메모</div>
+                                                            <div className="text-[10px] text-[var(--text-muted)] mb-0.5">?�사 메모</div>
                                                             <div className="text-[12px] text-[var(--text-light)] leading-[1.6]">{p.memo}</div>
                                                         </div>
                                                     )}
@@ -412,9 +412,9 @@ export default function DoctorDashboard() {
                                         </div>
                                     ) : (
                                         <div className="text-center py-10">
-                                            <div className="text-4xl mb-3">?��</div>
-                                            <p className="text-[14px] text-[var(--text-muted)] mb-2">?�약 기록???�습?�다</p>
-                                            <p className="text-[12px] text-[var(--text-muted)]">?�약 목록?�서 ?�자�??�택?�여 처방?�세??/p>
+                                            <div className="text-4xl mb-3">?��</div>
+                                            <p className="text-[14px] text-[var(--text-muted)] mb-2">?�약 기록???�습?�다</p>
+                                            <p className="text-[12px] text-[var(--text-muted)]">?�약 목록?�서 ?�자�??�택?�여 처방?�세??/p>
                                         </div>
                                     )}
                                 </div>
@@ -426,7 +426,7 @@ export default function DoctorDashboard() {
                     <div className="flex flex-col gap-6">
                         {/* Today Schedule */}
                         <div className="bg-white rounded-2xl border border-[var(--border)] p-6">
-                            <h3 className="text-[15px] font-bold text-primary-dark mb-4">?�늘???�정</h3>
+                            <h3 className="text-[15px] font-bold text-primary-dark mb-4">?�늘???�정</h3>
                             {todayReservations.length > 0 ? (
                                 <div className="flex flex-col gap-3">
                                     {todayReservations.map((res) => (
@@ -442,13 +442,13 @@ export default function DoctorDashboard() {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-[12px] text-[var(--text-muted)]">?�늘 ?�정??진료가 ?�습?�다</p>
+                                <p className="text-[12px] text-[var(--text-muted)]">?�늘 ?�정??진료가 ?�습?�다</p>
                             )}
                         </div>
 
                         {/* Upcoming */}
                         <div className="bg-white rounded-2xl border border-[var(--border)] p-6">
-                            <h3 className="text-[15px] font-bold text-primary-dark mb-4">?��??�는 ?�약</h3>
+                            <h3 className="text-[15px] font-bold text-primary-dark mb-4">?��??�는 ?�약</h3>
                             {upcomingReservations.length > 0 ? (
                                 <div className="flex flex-col gap-3">
                                     {upcomingReservations.slice(0, 5).map((res) => (
@@ -463,7 +463,7 @@ export default function DoctorDashboard() {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-[12px] text-[var(--text-muted)]">?��??�는 ?�약???�습?�다</p>
+                                <p className="text-[12px] text-[var(--text-muted)]">?��??�는 ?�약???�습?�다</p>
                             )}
                         </div>
 
@@ -471,14 +471,14 @@ export default function DoctorDashboard() {
                         <div className="bg-gradient-to-br from-primary-dark to-primary rounded-2xl p-6 text-white">
                             <div className="flex items-center gap-2 mb-3">
                                 <Shield size={16} />
-                                <span className="text-[12px] font-semibold text-accent tracking-wide">?�사 메뉴</span>
+                                <span className="text-[12px] font-semibold text-accent tracking-wide">?�사 메뉴</span>
                             </div>
                             <div className="flex flex-col gap-2">
                                 <Link href="/" className="flex items-center justify-between text-white/70 text-[13px] no-underline hover:text-white transition-colors py-2">
-                                    ?�으�?<ChevronRight size={14} />
+                                    ?�으�?<ChevronRight size={14} />
                                 </Link>
                                 <Link href="/doctors" className="flex items-center justify-between text-white/70 text-[13px] no-underline hover:text-white transition-colors py-2">
-                                    ?�료�??�이지 <ChevronRight size={14} />
+                                    ?�료�??�이지 <ChevronRight size={14} />
                                 </Link>
                             </div>
                         </div>
@@ -496,9 +496,9 @@ export default function DoctorDashboard() {
                             <div className="p-6 border-b border-[var(--border)]">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h2 className="text-[18px] font-bold text-primary-dark">?�� ?�약 기록 ?�성</h2>
+                                        <h2 className="text-[18px] font-bold text-primary-dark">?�� ?�약 기록 ?�성</h2>
                                         <p className="text-[12px] text-[var(--text-muted)] mt-1">
-                                            {selectedReservation.patientName} ?�자 · {selectedReservation.reservationDate}
+                                            {selectedReservation.patientName} ?�자 · {selectedReservation.reservationDate}
                                         </p>
                                     </div>
                                     <button
@@ -511,32 +511,32 @@ export default function DoctorDashboard() {
 
                             {/* Modal Body */}
                             <div className="p-6 flex flex-col gap-4">
-                                {/* 진단�?*/}
+                                {/* 진단�?*/}
                                 <div>
-                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">진단�?*</label>
+                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">진단�?*</label>
                                     <input
                                         type="text"
-                                        placeholder="?? 급성 ?�염, 감기"
+                                        placeholder="?? 급성 ?�염, 감기"
                                         value={prescriptionForm.diagnosis}
                                         onChange={(e) => setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })}
                                         className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
                                     />
                                 </div>
 
-                                {/* ?�품�?+ ?�량 */}
+                                {/* ?�품�?+ ?�량 */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">?�품�?*</label>
+                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">?�품�?*</label>
                                         <input
                                             type="text"
-                                            placeholder="?? ?�목?�실�?
+                                            placeholder="?? ?�목?�실�?
                                             value={prescriptionForm.medicineName}
                                             onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medicineName: e.target.value })}
                                             className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">?�량 *</label>
+                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">?�량 *</label>
                                         <input
                                             type="text"
                                             placeholder="?? 500mg"
@@ -547,12 +547,12 @@ export default function DoctorDashboard() {
                                     </div>
                                 </div>
 
-                                {/* 복용�?*/}
+                                {/* 복용�?*/}
                                 <div>
-                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">복용�?*</label>
+                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">복용�?*</label>
                                     <input
                                         type="text"
-                                        placeholder="?? 1??3?? ?�후 30�?
+                                        placeholder="?? 1??3?? ?�후 30�?
                                         value={prescriptionForm.instruction}
                                         onChange={(e) => setPrescriptionForm({ ...prescriptionForm, instruction: e.target.value })}
                                         className="w-full px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-[var(--bg)]"
@@ -562,7 +562,7 @@ export default function DoctorDashboard() {
                                 {/* 기간 */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">?�작??*</label>
+                                        <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">?�작??*</label>
                                         <input
                                             type="date"
                                             value={prescriptionForm.startDate}
@@ -583,9 +583,9 @@ export default function DoctorDashboard() {
 
                                 {/* 메모 */}
                                 <div>
-                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">?�사 메모 (?�택)</label>
+                                    <label className="block text-[12px] font-semibold text-primary-dark mb-1.5">?�사 메모 (?�택)</label>
                                     <textarea
-                                        placeholder="추�? 참고?�항???�력?�세??.."
+                                        placeholder="추�? 참고?�항???�력?�세??.."
                                         value={prescriptionForm.memo}
                                         onChange={(e) => setPrescriptionForm({ ...prescriptionForm, memo: e.target.value })}
                                         className="w-full h-20 px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all resize-none bg-[var(--bg)] leading-[1.6]"
@@ -606,7 +606,7 @@ export default function DoctorDashboard() {
                                     disabled={isSubmitting}
                                     className="btn-accent flex-1 !py-3 !text-[13px] !font-bold disabled:opacity-60"
                                 >
-                                    {isSubmitting ? "?�록 �?.." : "?�� 처방 ?�록"}
+                                    {isSubmitting ? "?�록 �?.." : "?�� 처방 ?�록"}
                                 </button>
                             </div>
                         </div>

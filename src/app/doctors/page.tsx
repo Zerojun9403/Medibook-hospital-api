@@ -24,7 +24,7 @@ interface Doctor {
 export default function DoctorsPage() {
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [departments, setDepartments] = useState<string[]>([]);
-    const [selectedDept, setSelectedDept] = useState("?�체");
+    const [selectedDept, setSelectedDept] = useState("?�체");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
 
@@ -34,13 +34,13 @@ export default function DoctorsPage() {
             .then((data) => {
                 setDoctors(data);
                 const depts = Array.from(new Set(data.map((d: Doctor) => d.departmentName))) as string[];
-                setDepartments(["?�체", ...depts]);
+                setDepartments(["?�체", ...depts]);
             })
             .catch(() => setDoctors([]));
     }, []);
 
     const filtered = doctors.filter((d) => {
-        const matchDept = selectedDept === "?�체" || d.departmentName === selectedDept;
+        const matchDept = selectedDept === "?�체" || d.departmentName === selectedDept;
         const tagList = d.tags || [];
         const matchSearch =
             !searchQuery ||
@@ -51,8 +51,8 @@ export default function DoctorsPage() {
     });
 
     const getEmoji = (name: string) => {
-        const female = ["?�수�?, "최�?지", "?�서??, "강�???];
-        return female.includes(name) ? "?��?�⚕�? : "?��?�⚕�?;
+        const female = ["?�수�?, "최�?지", "?�서??, "강�???];
+        return female.includes(name) ? "?��?�⚕�? : "?��?�⚕�?;
     };
 
     return (
@@ -67,7 +67,7 @@ export default function DoctorsPage() {
                         <div className="font-serif text-lg font-bold text-primary-dark leading-tight">MediBook</div>
                     </Link>
                     <Link href="/" className="text-[13px] text-[var(--text-muted)] no-underline hover:text-primary transition-colors">
-                        ???�으�?                    </Link>
+                        ???�으�?                    </Link>
                 </div>
             </header>
 
@@ -79,9 +79,9 @@ export default function DoctorsPage() {
                         <div className="gold-line" />
                         <span className="text-accent text-[12px] font-semibold tracking-[0.15em] uppercase">Medical Staff</span>
                     </div>
-                    <h1 className="font-serif text-[36px] font-bold text-white mb-3">?�료�??�개</h1>
+                    <h1 className="font-serif text-[36px] font-bold text-white mb-3">?�료�??�개</h1>
                     <p className="text-[15px] text-white/50 max-w-[480px]">
-                        �?분야 최고???�문?��? ?�확??진단�?치료�??�공?�니??                    </p>
+                        �?분야 최고???�문?��? ?�확??진단�?치료�??�공?�니??                    </p>
                 </div>
             </section>
 
@@ -94,7 +94,7 @@ export default function DoctorsPage() {
                         </div>
                         <input
                             type="text"
-                            placeholder="?�료�?검??(?�름, ?�문분야...)"
+                            placeholder="?�료�?검??(?�름, ?�문분야...)"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 rounded-xl border-[1.5px] border-[var(--border)] text-[13px] outline-none focus:border-primary transition-all bg-white"
@@ -115,7 +115,7 @@ export default function DoctorsPage() {
                 </div>
 
                 <div className="text-[13px] text-[var(--text-muted)] mb-6">
-                    �?<span className="text-primary font-bold">{filtered.length}</span>명의 ?�료�?                </div>
+                    �?<span className="text-primary font-bold">{filtered.length}</span>명의 ?�료�?                </div>
 
                 {/* Doctor Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -152,7 +152,7 @@ export default function DoctorsPage() {
                                             <Star size={14} className="text-accent" />
                                             <span className="text-[13px] font-bold text-primary-dark">{doctor.rating.toFixed(1)}</span>
                                         </div>
-                                        <span className="text-[11px] text-[var(--text-muted)]">리뷰 {doctor.reviewCount}�?/span>
+                                        <span className="text-[11px] text-[var(--text-muted)]">리뷰 {doctor.reviewCount}�?/span>
                                         <span className="text-[11px] text-[var(--text-muted)]">·</span>
                                         <span className="text-[11px] text-[var(--text-muted)]">경력 {doctor.experienceYears}??/span>
                                     </div>
@@ -176,7 +176,7 @@ export default function DoctorsPage() {
                                         onClick={(e) => e.stopPropagation()}
                                         className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-[12px] font-semibold no-underline transition-all ${doctor.available ? "bg-primary/[0.06] text-primary hover:bg-primary hover:text-white" : "bg-[var(--bg)] text-[var(--text-muted)] pointer-events-none"}`}
                                     >
-                                        {doctor.available ? "?�약?�기" : "?�약 마감"} <ChevronRight size={14} />
+                                        {doctor.available ? "?�약?�기" : "?�약 마감"} <ChevronRight size={14} />
                                     </Link>
                                 </div>
                             </div>
@@ -186,9 +186,9 @@ export default function DoctorsPage() {
 
                 {filtered.length === 0 && (
                     <div className="text-center py-16">
-                        <div className="text-5xl mb-4">?��</div>
-                        <h3 className="text-[16px] font-bold text-primary-dark mb-2">검??결과가 ?�습?�다</h3>
-                        <p className="text-[13px] text-[var(--text-muted)]">?�른 검?�어??진료과�? ?�택?�보?�요</p>
+                        <div className="text-5xl mb-4">?��</div>
+                        <h3 className="text-[16px] font-bold text-primary-dark mb-2">검??결과가 ?�습?�다</h3>
+                        <p className="text-[13px] text-[var(--text-muted)]">?�른 검?�어??진료과�? ?�택?�보?�요</p>
                     </div>
                 )}
             </div>
@@ -222,9 +222,9 @@ export default function DoctorsPage() {
                         <div className="p-8">
                             <div className="grid grid-cols-3 gap-3 mb-6">
                                 {[
-                                    { label: "?�점", value: selectedDoctor.rating.toFixed(1), sub: `${selectedDoctor.reviewCount}�?리뷰` },
-                                    { label: "경력", value: `${selectedDoctor.experienceYears}??, sub: "?�상 경험" },
-                                    { label: "?�력", value: "?�학박사", sub: selectedDoctor.education || "-" },
+                                    { label: "?�점", value: selectedDoctor.rating.toFixed(1), sub: `${selectedDoctor.reviewCount}�?리뷰` },
+                                    { label: "경력", value: `${selectedDoctor.experienceYears}??, sub: "?�상 경험" },
+                                    { label: "?�력", value: "?�학박사", sub: selectedDoctor.education || "-" },
                                 ].map((s, i) => (
                                     <div key={i} className="text-center p-3 rounded-xl bg-[var(--bg)]">
                                         <div className="text-[16px] font-bold text-primary-dark">{s.value}</div>
@@ -236,14 +236,14 @@ export default function DoctorsPage() {
 
                             {selectedDoctor.bio && (
                                 <>
-                                    <h3 className="text-[13px] font-bold text-primary-dark mb-2">?�개</h3>
+                                    <h3 className="text-[13px] font-bold text-primary-dark mb-2">?�개</h3>
                                     <p className="text-[13px] text-[var(--text-light)] leading-[1.8] mb-5">{selectedDoctor.bio}</p>
                                 </>
                             )}
 
                             {selectedDoctor.tags && selectedDoctor.tags.length > 0 && (
                                 <>
-                                    <h3 className="text-[13px] font-bold text-primary-dark mb-2">?�문 분야</h3>
+                                    <h3 className="text-[13px] font-bold text-primary-dark mb-2">?�문 분야</h3>
                                     <div className="flex flex-wrap gap-2 mb-6">
                                         {selectedDoctor.tags.map((tag, i) => (
                                             <span key={i} className="text-[11px] px-3 py-1.5 rounded-full bg-accent/[0.08] text-accent font-semibold">
@@ -255,13 +255,13 @@ export default function DoctorsPage() {
                             )}
 
                             <div className="flex gap-3">
-                                <button onClick={() => setSelectedDoctor(null)} className="btn-outline flex-1 !py-3 !text-[13px]">?�기</button>
+                                <button onClick={() => setSelectedDoctor(null)} className="btn-outline flex-1 !py-3 !text-[13px]">?�기</button>
                                 {selectedDoctor.available && (
                                     <Link
                                         href={`/booking?dept=${encodeURIComponent(selectedDoctor.departmentName)}&doctor=${encodeURIComponent(selectedDoctor.name)}`}
                                         className="btn-accent flex-1 !py-3 !text-[13px] no-underline text-center"
                                     >
-                                        ???�료진으�??�약 ??                                    </Link>
+                                        ???�료진으�??�약 ??                                    </Link>
                                 )}
                             </div>
                         </div>

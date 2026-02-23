@@ -39,7 +39,7 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(data?.message || "?�버 ?�류가 발생?�습?�다");
+  if (!response.ok) throw new Error(data?.message || "?�버 ?�류가 발생?�습?�다");
   return data;
 }
 
