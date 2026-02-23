@@ -1,4 +1,4 @@
-const API_BASE = "https://medibook-backend-1-zgb5.onrender.com/api";
+const API_BASE = "http://ec2-3-27-218-253.ap-southeast-2.compute.amazonaws.com:8080/api";
 
 export const tokenManager = {
   getAccessToken: () => {
@@ -39,7 +39,7 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(data?.message || "서버 오류가 발생했습니다");
+  if (!response.ok) throw new Error(data?.message || "?�버 ?�류가 발생?�습?�다");
   return data;
 }
 
