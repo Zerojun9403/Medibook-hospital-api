@@ -1,4 +1,4 @@
-const API_BASE = "http://ec2-3-27-218-253.ap-southeast-2.compute.amazonaws.com:8080/api";
+const API_BASE = "/api";
 
 export const tokenManager = {
   getAccessToken: () => {
@@ -36,10 +36,14 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers,
+  });
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(data?.message || "?�버 ?�류가 발생?�습?�다");
+  if (!response.ok)
+    throw new Error(data?.message || "?�버 ?�류가 발생?�습?�다");
   return data;
 }
 
@@ -64,7 +68,10 @@ export const authAPI = {
     birthdate?: string;
     userType: string;
   }) => {
-    return fetchAPI("/auth/register", { method: "POST", body: JSON.stringify(data) });
+    return fetchAPI("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
   logout: () => {
     tokenManager.clear();
@@ -77,19 +84,27 @@ export const departmentAPI = { getAll: () => fetchAPI("/departments") };
 export const doctorAPI = {
   getAll: () => fetchAPI("/doctors"),
   getById: (id: number) => fetchAPI(`/doctors/${id}`),
-  getByDepartment: (departmentId: number) => fetchAPI(`/doctors?departmentId=${departmentId}`),
+  getByDepartment: (departmentId: number) =>
+    fetchAPI(`/doctors?departmentId=${departmentId}`),
 };
 export const reservationAPI = {
-  create: (data: { doctorId: number; reservationDate: string; reservationTime: string; symptom?: string }) =>
+  create: (data: {
+    doctorId: number;
+    reservationDate: string;
+    reservationTime: string;
+    symptom?: string;
+  }) =>
     fetchAPI("/reservations", { method: "POST", body: JSON.stringify(data) }),
   getMyReservations: () => fetchAPI("/reservations/my"),
-  cancel: (id: number) => fetchAPI(`/reservations/${id}/cancel`, { method: "PATCH" }),
+  cancel: (id: number) =>
+    fetchAPI(`/reservations/${id}/cancel`, { method: "PATCH" }),
   getAvailableSlots: (doctorId: number, date: string) =>
     fetchAPI(`/reservations/available-slots?doctorId=${doctorId}&date=${date}`),
 };
 export const notificationAPI = {
   getAll: () => fetchAPI("/notifications"),
-  markAsRead: (id: number) => fetchAPI(`/notifications/${id}/read`, { method: "PATCH" }),
+  markAsRead: (id: number) =>
+    fetchAPI(`/notifications/${id}/read`, { method: "PATCH" }),
 };
 // ===== User API =====
 export const userAPI = {
